@@ -1,13 +1,206 @@
 ---
-title: "Post With Code"
-author: "Harlow Malloc"
-date: "2022-07-26"
-categories: [news, code, analysis]
-image: "image.jpg"
+title: "Does Height Matter When Running for President?"
+author: "Bertrand Wilden"
+date: "2022-08-09"
+categories: [Bayes]
 ---
 
-This is a post with executable code.
+Height is supposed to confer all sorts of advantages in life. Taller people make more money, have an easier time finding romantic partners, and can reach things off the highest shelves without using a step stool. But does height matter when it comes to politics? The topic has been the subject of extensive debate---so much so that a [Wikipedia page](https://en.wikipedia.org/wiki/Heights_of_presidents_and_presidential_candidates_of_the_United_States) was written to provide information on the heights of US presidential candidates. In this post I analyze this debate quantitatively using R and Bayesian regression methods. My results conclusively show that height probably doesn't matter much when it comes to winning the presidency.
 
 ```{r}
-1 + 1
+#| message: false
+#| warning: false
+
+# Loading in the packages used
+library(tidyverse)
+library(rvest)
+library(MetBrewer)
+library(ggdist)
+library(brms)
+library(distributional)
+library(geomtextpath)
+library(tidybayes)
+
+# Global plotting theme for ggplot
+theme_set(theme_ggdist())
+
+# Set global rounding options
+options(scipen = 1, 
+        digits = 3)
 ```
+
+## Getting the data
+
+The first thing to do is gather the data on presidential candidate heights. The package [rvest](https://rvest.tidyverse.org/) is a great way to scrape the Wikipedia page above. It's pretty easy to get data off Wikipedia because the HTML is relatively simple. But tables of data on Wikipedia need a bit of cleaning before they can be used for any statistical analysis. You have to remove things like citation markers, as well as fix column names and make sure columns containing numbers are actually `numeric` types. 
+
+```{r}
+url <- "https://en.wikipedia.org/wiki/Heights_of_presidents_and_presidential_candidates_of_the_United_States"
+
+height_table <- url |> 
+  # Parse the raw html
+  read_html() |> 
+  # Pull out the table elements
+  html_elements("table") |> 
+  purrr::pluck(5) |> 
+  # Turn the candidate height table into a tibble
+  html_table()
+
+heights <- height_table |> 
+  # Assign names to all columns to fix duplicate originals
+  `colnames<-`(c("election", "winner", "winner_height_in", "winner_height_cm",
+               "opponent", "opponent_height_in", "opponent_height_cm",
+               "difference_in", "difference_cm")) |> 
+  # Removing problematic elections
+  filter(!election %in% c("1912", "1860", "1856", "1836", "1824"),
+         opponent_height_cm != "") |> 
+  # Cleaning up the citation markers and fixing column types
+  mutate(across(everything(),
+                ~ str_remove_all(., "\\[.*\\]")),
+         across(contains("_cm"), 
+                ~ str_remove_all(.x, "\\D") |> 
+                  as.numeric()),
+         # Making a few new variable for the analysis
+         winner_difference_cm = winner_height_cm - opponent_height_cm,
+         winner_taller = if_else(winner_difference_cm > 0, 1, 0))
+```
+
+In the process of cleaning the presidential candidate height data I decided to remove all elections in which more than two candidates ran (1824, 1836, 1856, 1860, 1912), all elections in which a candidate's height was missing from Wikipedia (1816: Rufus King, 1868: Horatio Seymour), and all uncontested elections (1788 and 1792: George Washington, 1820 James Monroe). No information regarding a height advantage can be gleaned from the latter two categories (unless it was Washington's large stature that helped dissuade any potential challengers) so their exclusion should be uncontroversial. The removal of multi-candidate elections, however, was a choice I made in order to simplify the analysis. The role of height in a multi-candidate election is less straightforward than in a two-candidate election. Should we suppose voters simply gravitate towards the tallest candidate running? Or are they making height comparisons between all three candidates at once? Because political science lacks a good theory to support any of these explanations I dropped multi-candidate elections and moved on.
+
+After these cleaning steps I made a new variable called `winner_taller` which simply denotes whether that taller candidate won the particular election, 1 or lost, 0. Using `mean(heights$winner_taller)` we see that the proportion of elections won by the taller candidate is `r mean(heights$winner_taller)`. The taller candidate wins more on average! Skeptical readers will object that the sample size is too low for this result to be conclusive. "What is the standard error of the proportion!" they will say, "I want to see a p-value!" These are valid critiques, but as a fervent Bayesian I refuse to calculate any p-values. Let's move on to some further analysis.
+
+## Presidential candidates compared to the general population
+
+The original candidate height data set was at the election-level, meaning that every row represented a presidential election year. In order to look at candidate heights individually, I transformed the data into "long" format such that each row represents a single candidate. With the data at the candidate-level, we can now investigate how the heights of presidential candidates compare to the overall population. 
+
+```{r}
+heights_long <- heights |> 
+  pivot_longer(cols = c("winner", "opponent"),
+               values_to = "candidate",
+               names_to = "status") |> 
+  # Creating a single variable for candidate height
+  mutate(height_cm = case_when(status == "winner" ~ winner_height_cm,
+                               status == "opponent" ~ opponent_height_cm))
+```
+
+The graph below shows the distribution of candidate heights compared to the US adult male population. The variable "height" is often used to illustrate a Normal distribution in action. But technically, the Normal distribution does not accurately reflect height unless we first narrow the population down. Children and adults do not share the same height distribution, and neither do different genders. Each country, or region of the globe, likely also has a distinct height distribution. So unless we clearly define which population we're talking about, "height" is best characterized as a *mixture* of normal distributions. Since almost all US presidential candidates have been adult men, however, I overlaid only the distribution for US adult males (mean 178 cm, standard deviation 8 cm). 
+
+```{r}
+heights_long |>
+  select(height_cm, candidate) |> 
+  distinct() |> 
+  ggplot() +
+  stat_function(geom = "textpath", vjust = 0, hjust = .2,
+                label = "US Male Population",
+                fun = function(x) dnorm(x, mean = 178, sd = 8) * 20) +
+  geom_dots(aes(x = height_cm,
+                fill = candidate == "Hillary Clinton",
+                group = NA),
+            size = .1) +
+  scale_fill_manual(values = met.brewer("Lakota", 2)) +
+  xlim(150, 200) +
+  labs(x = "Height in cm", y = "",
+       title = "Heights of US Presidential Candidates\nCompared to US Male Population") +
+  theme(legend.position = "none",
+        axis.line.y = element_blank(),
+        axis.text.y = element_blank())
+```
+
+Hillary Clinton (represented by the yellow dot in the candidate distribution) should not be compared to the average US male in terms of height---but interestingly, isn't the shortest candidate in US history. That honor goes to James Madison at 163 cm (5' 4"). The graph shows that presidential candidates roughly align with overall male population heights. Perhaps candidates are *slightly* taller than the average US male, but the difference appears small.
+
+## How much does height contribute to winning the presidency?
+
+Okay, so we discovered that the taller candidate wins slightly more often on average, but how does raw height affect a candidate's chances of becoming president? To answer this question, we need to add a new dummy variable to our candidate-level data set indicating whether they won or lost.
+
+```{r}
+heights_long <- heights_long |> 
+  mutate(winner = if_else(status == "winner", 1, 0))
+```
+
+Then I fit the following Bayesian logistic regression model to the data:
+
+\begin{equation*}
+\begin{aligned}
+\text{Winner}_i &\sim \text{Bernoulli}(p) \\
+p &= \text{logit}^{-1}(\alpha + \beta \ \text{Height}_i) \\
+\alpha &\sim \text{Normal}(0, 2) \\
+\beta &\sim \text{Normal}(0, 2)
+\end{aligned}
+\end{equation*}
+
+There's nothing too fancy going on in this model---just a standard logistic regression with a binary outcome (winning the presidency or not winning the presidency). The Normal(0, 2) priors on the intercept and slope coefficients are weakly informative, meaning they are wide enough to let the data inform our results, but narrow enough to be skeptical of extreme values. Given background knowledge of height in presidential campaigns, it's unlikely it has a big effect on the outcome.
+
+The code below fits the model using the [brms](https://paul-buerkner.github.io/brms/) package in R. Because the data only contain 96 candidate observations, the MCMC chains converge extremely quickly. Only 1.2 seconds for 12,000 iterations! Good practice when working with Bayesian models dictates that we look into the diagnostic measures (R-hat, effective sample size, number of divergent transitions, etc) of our fitted model. But since this model is very simple, I hope you will trust me that the fitting process worked reliably well.
+
+```{r}
+height_model <- brm(
+  winner ~ 1 + height_cm,
+  prior = prior(normal(0, 2), class = "b") +
+          prior(normal(0, 2), class = "Intercept"),
+  family = bernoulli(link = "logit"),
+  data = heights_long,
+  seed = 111,
+  refresh = 0,
+  iter = 12000,
+  backend = "cmdstanr"
+)
+```
+
+Attempting to directly interpret coefficient values from logit models is rarely a good idea. Instead we can graph the results and compare the predicted probabilities of the outcome variable (winning the presidency) against a range of input variable values (candidate height in cm). This is what the (logit dotplot)[https://www.barelysignificant.com/post/glm/] below shows. The dots on the top and bottom of the graph represent candidates that either won or lost, and the line between them shows what our model predicts the winning probability to be at each height value on the x-axis. the weakly upward slope on this prediction line tells us that there is barely any benefit to being an extra cm taller when it comes to winning a presidential election.
+
+```{r}
+# Generate a set of values across the range of the height data
+prediction_grid <- with(heights_long, 
+  data.frame(height_cm = seq(min(height_cm), max(height_cm), length.out = 100))
+)
+
+prediction_grid |> 
+  # Generate posterior draws
+  add_epred_draws(height_model, ndraws = 100) |> 
+  # Collapse down to the height level
+  group_by(height_cm) |> 
+  summarise(.median = median(.epred),
+            .sd = sd(.epred)) |> 
+  # Convert log odds into predicted probabilities
+  mutate(log_odds = dist_normal(.median, .sd),
+         p_winner = dist_transformed(log_odds, plogis, qlogis)) |> 
+  ggplot(aes(x = height_cm)) +
+  geom_dots(
+    aes(y = winner, side = ifelse(winner == 1, "bottom", "top")),
+    scale = 0.4,
+    fill = "#931e18",
+    size = .1,
+    data = heights_long) +
+  stat_lineribbon(
+    aes(ydist = p_winner), alpha = .25, fill = "#931e18", size = .5) +
+  labs(title = "Predicted Probability of Winning the Presidency\nBased on Candidate Height",
+       x = "Height cm",
+       y = "Pr(Winning)")
+```
+
+Apparently height has little effect on the probability that a candidate wins the presidency. But what if the candidate was *extremely* tall? It is now time to make a confession. The true reason I started this project was for selfish reasons. As someone who is 206 cm tall (6' 9"), I wanted to know what my chances were of becoming president based only on my height. Plugging my 206 cm into the logistic regression model produces the posterior probability distribution shown in the graph below. While there is considerable uncertainty due to the small sample size of candidates, the model says I have between a 60 and 70% chance to win. Amazing!
+
+```{r}
+prediction_grid <- with(heights_long, 
+  data.frame(height_cm = 206)
+)
+
+prediction_grid |> 
+  add_epred_draws(height_model, ndraws = 12000) |> 
+  mutate(p_winner = 1 / (1 + exp(-.epred))) |> 
+  ggplot(aes(x = p_winner)) +
+  stat_slabinterval(fill = "#04a3bd", trim = FALSE) +
+  labs(title = "Posterior Probability of Winning\nfor Someone Very Tall",
+       x = "Pr(Winning | Height = 206 cm)",
+       y = "") +
+  theme(axis.line.y = element_blank(),
+        axis.text.y = element_blank())
+```
+
+As we all know, numbers don't lie. So keep an eye out for the Bert--2024 campaign coming soon.
+
+## Session info
+
+```{r}
+sessionInfo()
+```
+

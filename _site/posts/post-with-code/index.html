@@ -6,10 +6,10 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
-<meta name="author" content="Harlow Malloc">
-<meta name="dcterms.date" content="2022-07-26">
+<meta name="author" content="Bertrand Wilden">
+<meta name="dcterms.date" content="2022-08-09">
 
-<title>bwilden - Post With Code</title>
+<title>Bertrand Wilden - Does Height Matter When Running for President?</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -119,6 +119,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
   }
 }</script>
 
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
 
 <link rel="stylesheet" href="../../styles.css">
 </head>
@@ -130,7 +131,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
     <nav class="navbar navbar-expand-lg navbar-dark ">
       <div class="navbar-container container-fluid">
       <a class="navbar-brand" href="../../index.html">
-    <span class="navbar-title">bwilden</span>
+    <span class="navbar-title">Bertrand Wilden</span>
   </a>
           <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
   <span class="navbar-toggler-icon"></span>
@@ -141,12 +142,12 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
     <a class="nav-link" href="../../about.html">About</a>
   </li>  
   <li class="nav-item compact">
-    <a class="nav-link" href="https://github.com/"><i class="bi bi-github" role="img">
+    <a class="nav-link" href="https://github.com/bwilden"><i class="bi bi-github" role="img">
 </i> 
  </a>
   </li>  
   <li class="nav-item compact">
-    <a class="nav-link" href="https://twitter.com"><i class="bi bi-twitter" role="img">
+    <a class="nav-link" href="https://twitter.com/bertrand_wilden"><i class="bi bi-twitter" role="img">
 </i> 
  </a>
   </li>  
@@ -160,11 +161,9 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <header id="title-block-header" class="quarto-title-block default page-columns page-full">
   <div class="quarto-title-banner page-columns page-full">
     <div class="quarto-title column-body">
-      <h1 class="title">Post With Code</h1>
+      <h1 class="title">Does Height Matter When Running for President?</h1>
                                 <div class="quarto-categories">
-                <div class="quarto-category">news</div>
-                <div class="quarto-category">code</div>
-                <div class="quarto-category">analysis</div>
+                <div class="quarto-category">Bayes</div>
               </div>
                   </div>
   </div>
@@ -175,14 +174,14 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
       <div>
       <div class="quarto-title-meta-heading">Author</div>
       <div class="quarto-title-meta-contents">
-               <p>Harlow Malloc </p>
+               <p>Bertrand Wilden </p>
             </div>
     </div>
       
       <div>
       <div class="quarto-title-meta-heading">Published</div>
       <div class="quarto-title-meta-contents">
-        <p class="date">July 26, 2022</p>
+        <p class="date">August 9, 2022</p>
       </div>
     </div>
       
@@ -199,15 +198,275 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 
 
 
-<p>This is a post with executable code.</p>
+<p>Height is supposed to confer all sorts of advantages in life. Taller people make more money, have an easier time finding romantic partners, and can reach things off the highest shelves without using a step stool. But does height matter when it comes to politics? The topic has been the subject of extensive debate—so much so that a <a href="https://en.wikipedia.org/wiki/Heights_of_presidents_and_presidential_candidates_of_the_United_States">Wikipedia page</a> was written to provide information on the heights of US presidential candidates. In this post I analyze this debate quantitatively using R and Bayesian regression methods. My results conclusively show that height probably doesn’t matter much when it comes to winning the presidency.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="dv">1</span> <span class="sc">+</span> <span class="dv">1</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Loading in the packages used</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyverse)</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(rvest)</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(MetBrewer)</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(ggdist)</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(brms)</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(distributional)</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(geomtextpath)</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidybayes)</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="co"># Global plotting theme for ggplot</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a><span class="fu">theme_set</span>(<span class="fu">theme_ggdist</span>())</span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a><span class="co"># Set global rounding options</span></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a><span class="fu">options</span>(<span class="at">scipen =</span> <span class="dv">1</span>, </span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>        <span class="at">digits =</span> <span class="dv">3</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<section id="getting-the-data" class="level2">
+<h2 class="anchored" data-anchor-id="getting-the-data">Getting the data</h2>
+<p>The first thing to do is gather the data on presidential candidate heights. The package <a href="https://rvest.tidyverse.org/">rvest</a> is a great way to scrape the Wikipedia page above. It’s pretty easy to get data off Wikipedia because the HTML is relatively simple. But tables of data on Wikipedia need a bit of cleaning before they can be used for any statistical analysis. You have to remove things like citation markers, as well as fix column names and make sure columns containing numbers are actually <code>numeric</code> types.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>url <span class="ot">&lt;-</span> <span class="st">"https://en.wikipedia.org/wiki/Heights_of_presidents_and_presidential_candidates_of_the_United_States"</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>height_table <span class="ot">&lt;-</span> url <span class="sc">|&gt;</span> </span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Parse the raw html</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">read_html</span>() <span class="sc">|&gt;</span> </span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Pull out the table elements</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">html_elements</span>(<span class="st">"table"</span>) <span class="sc">|&gt;</span> </span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>  purrr<span class="sc">::</span><span class="fu">pluck</span>(<span class="dv">5</span>) <span class="sc">|&gt;</span> </span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Turn the candidate height table into a tibble</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">html_table</span>()</span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>heights <span class="ot">&lt;-</span> height_table <span class="sc">|&gt;</span> </span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Assign names to all columns to fix duplicate originals</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>  <span class="st">`</span><span class="at">colnames&lt;-</span><span class="st">`</span>(<span class="fu">c</span>(<span class="st">"election"</span>, <span class="st">"winner"</span>, <span class="st">"winner_height_in"</span>, <span class="st">"winner_height_cm"</span>,</span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>               <span class="st">"opponent"</span>, <span class="st">"opponent_height_in"</span>, <span class="st">"opponent_height_cm"</span>,</span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>               <span class="st">"difference_in"</span>, <span class="st">"difference_cm"</span>)) <span class="sc">|&gt;</span> </span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Removing problematic elections</span></span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="sc">!</span>election <span class="sc">%in%</span> <span class="fu">c</span>(<span class="st">"1912"</span>, <span class="st">"1860"</span>, <span class="st">"1856"</span>, <span class="st">"1836"</span>, <span class="st">"1824"</span>),</span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>         opponent_height_cm <span class="sc">!=</span> <span class="st">""</span>) <span class="sc">|&gt;</span> </span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Cleaning up the citation markers and fixing column types</span></span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="fu">across</span>(<span class="fu">everything</span>(),</span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a>                <span class="sc">~</span> <span class="fu">str_remove_all</span>(., <span class="st">"</span><span class="sc">\\</span><span class="st">[.*</span><span class="sc">\\</span><span class="st">]"</span>)),</span>
+<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a>         <span class="fu">across</span>(<span class="fu">contains</span>(<span class="st">"_cm"</span>), </span>
+<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a>                <span class="sc">~</span> <span class="fu">str_remove_all</span>(.x, <span class="st">"</span><span class="sc">\\</span><span class="st">D"</span>) <span class="sc">|&gt;</span> </span>
+<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a>                  <span class="fu">as.numeric</span>()),</span>
+<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a>         <span class="co"># Making a few new variable for the analysis</span></span>
+<span id="cb2-27"><a href="#cb2-27" aria-hidden="true" tabindex="-1"></a>         <span class="at">winner_difference_cm =</span> winner_height_cm <span class="sc">-</span> opponent_height_cm,</span>
+<span id="cb2-28"><a href="#cb2-28" aria-hidden="true" tabindex="-1"></a>         <span class="at">winner_taller =</span> <span class="fu">if_else</span>(winner_difference_cm <span class="sc">&gt;</span> <span class="dv">0</span>, <span class="dv">1</span>, <span class="dv">0</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>In the process of cleaning the presidential candidate height data I decided to remove all elections in which more than two candidates ran (1824, 1836, 1856, 1860, 1912), all elections in which a candidate’s height was missing from Wikipedia (1816: Rufus King, 1868: Horatio Seymour), and all uncontested elections (1788 and 1792: George Washington, 1820 James Monroe). No information regarding a height advantage can be gleaned from the latter two categories (unless it was Washington’s large stature that helped dissuade any potential challengers) so their exclusion should be uncontroversial. The removal of multi-candidate elections, however, was a choice I made in order to simplify the analysis. The role of height in a multi-candidate election is less straightforward than in a two-candidate election. Should we suppose voters simply gravitate towards the tallest candidate running? Or are they making height comparisons between all three candidates at once? Because political science lacks a good theory to support any of these explanations I dropped multi-candidate elections and moved on.</p>
+<p>After these cleaning steps I made a new variable called <code>winner_taller</code> which simply denotes whether that taller candidate won the particular election, 1 or lost, 0. Using <code>mean(heights$winner_taller)</code> we see that the proportion of elections won by the taller candidate is 0.551. The taller candidate wins more on average! Skeptical readers will object that the sample size is too low for this result to be conclusive. “What is the standard error of the proportion!” they will say, “I want to see a p-value!” These are valid critiques, but as a fervent Bayesian I refuse to calculate any p-values. Let’s move on to some further analysis.</p>
+</section>
+<section id="presidential-candidates-compared-to-the-general-population" class="level2">
+<h2 class="anchored" data-anchor-id="presidential-candidates-compared-to-the-general-population">Presidential candidates compared to the general population</h2>
+<p>The original candidate height data set was at the election-level, meaning that every row represented a presidential election year. In order to look at candidate heights individually, I transformed the data into “long” format such that each row represents a single candidate. With the data at the candidate-level, we can now investigate how the heights of presidential candidates compare to the overall population.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>heights_long <span class="ot">&lt;-</span> heights <span class="sc">|&gt;</span> </span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pivot_longer</span>(<span class="at">cols =</span> <span class="fu">c</span>(<span class="st">"winner"</span>, <span class="st">"opponent"</span>),</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>               <span class="at">values_to =</span> <span class="st">"candidate"</span>,</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>               <span class="at">names_to =</span> <span class="st">"status"</span>) <span class="sc">|&gt;</span> </span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Creating a single variable for candidate height</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">height_cm =</span> <span class="fu">case_when</span>(status <span class="sc">==</span> <span class="st">"winner"</span> <span class="sc">~</span> winner_height_cm,</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>                               status <span class="sc">==</span> <span class="st">"opponent"</span> <span class="sc">~</span> opponent_height_cm))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>The graph below shows the distribution of candidate heights compared to the US adult male population. The variable “height” is often used to illustrate a Normal distribution in action. But technically, the Normal distribution does not accurately reflect height unless we first narrow the population down. Children and adults do not share the same height distribution, and neither do different genders. Each country, or region of the globe, likely also has a distinct height distribution. So unless we clearly define which population we’re talking about, “height” is best characterized as a <em>mixture</em> of normal distributions. Since almost all US presidential candidates have been adult men, however, I overlaid only the distribution for US adult males (mean 178 cm, standard deviation 8 cm).</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>heights_long <span class="sc">|&gt;</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(height_cm, candidate) <span class="sc">|&gt;</span> </span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">distinct</span>() <span class="sc">|&gt;</span> </span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>() <span class="sc">+</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">stat_function</span>(<span class="at">geom =</span> <span class="st">"textpath"</span>, <span class="at">vjust =</span> <span class="dv">0</span>, <span class="at">hjust =</span> .<span class="dv">2</span>,</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>                <span class="at">label =</span> <span class="st">"US Male Population"</span>,</span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>                <span class="at">fun =</span> <span class="cf">function</span>(x) <span class="fu">dnorm</span>(x, <span class="at">mean =</span> <span class="dv">178</span>, <span class="at">sd =</span> <span class="dv">8</span>) <span class="sc">*</span> <span class="dv">20</span>) <span class="sc">+</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_dots</span>(<span class="fu">aes</span>(<span class="at">x =</span> height_cm,</span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>                <span class="at">fill =</span> candidate <span class="sc">==</span> <span class="st">"Hillary Clinton"</span>,</span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>                <span class="at">group =</span> <span class="cn">NA</span>),</span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>            <span class="at">size =</span> .<span class="dv">1</span>) <span class="sc">+</span></span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_fill_manual</span>(<span class="at">values =</span> <span class="fu">met.brewer</span>(<span class="st">"Lakota"</span>, <span class="dv">2</span>)) <span class="sc">+</span></span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">xlim</span>(<span class="dv">150</span>, <span class="dv">200</span>) <span class="sc">+</span></span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">"Height in cm"</span>, <span class="at">y =</span> <span class="st">""</span>,</span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a>       <span class="at">title =</span> <span class="st">"Heights of US Presidential Candidates</span><span class="sc">\n</span><span class="st">Compared to US Male Population"</span>) <span class="sc">+</span></span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span>(<span class="at">legend.position =</span> <span class="st">"none"</span>,</span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a>        <span class="at">axis.line.y =</span> <span class="fu">element_blank</span>(),</span>
+<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a>        <span class="at">axis.text.y =</span> <span class="fu">element_blank</span>())</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="index_files/figure-html/unnamed-chunk-4-1.png" class="img-fluid" width="672"></p>
+</div>
+</div>
+<p>Hillary Clinton (represented by the yellow dot in the candidate distribution) should not be compared to the average US male in terms of height—but interestingly, isn’t the shortest candidate in US history. That honor goes to James Madison at 163 cm (5’ 4”). The graph shows that presidential candidates roughly align with overall male population heights. Perhaps candidates are <em>slightly</em> taller than the average US male, but the difference appears small.</p>
+</section>
+<section id="how-much-does-height-contribute-to-winning-the-presidency" class="level2">
+<h2 class="anchored" data-anchor-id="how-much-does-height-contribute-to-winning-the-presidency">How much does height contribute to winning the presidency?</h2>
+<p>Okay, so we discovered that the taller candidate wins slightly more often on average, but how does raw height affect a candidate’s chances of becoming president? To answer this question, we need to add a new dummy variable to our candidate-level data set indicating whether they won or lost.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>heights_long <span class="ot">&lt;-</span> heights_long <span class="sc">|&gt;</span> </span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">winner =</span> <span class="fu">if_else</span>(status <span class="sc">==</span> <span class="st">"winner"</span>, <span class="dv">1</span>, <span class="dv">0</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Then I fit the following Bayesian logistic regression model to the data:</p>
+<p><span class="math display">\[\begin{equation*}
+\begin{aligned}
+\text{Winner}_i &amp;\sim \text{Bernoulli}(p) \\
+p &amp;= \text{logit}^{-1}(\alpha + \beta \ \text{Height}_i) \\
+\alpha &amp;\sim \text{Normal}(0, 2) \\
+\beta &amp;\sim \text{Normal}(0, 2)
+\end{aligned}
+\end{equation*}\]</span></p>
+<p>There’s nothing too fancy going on in this model—just a standard logistic regression with a binary outcome (winning the presidency or not winning the presidency). The Normal(0, 2) priors on the intercept and slope coefficients are weakly informative, meaning they are wide enough to let the data inform our results, but narrow enough to be skeptical of extreme values. Given background knowledge of height in presidential campaigns, it’s unlikely it has a big effect on the outcome.</p>
+<p>The code below fits the model using the <a href="https://paul-buerkner.github.io/brms/">brms</a> package in R. Because the data only contain 96 candidate observations, the MCMC chains converge extremely quickly. Only 1.2 seconds for 12,000 iterations! Good practice when working with Bayesian models dictates that we look into the diagnostic measures (R-hat, effective sample size, number of divergent transitions, etc) of our fitted model. But since this model is very simple, I hope you will trust me that the fitting process worked reliably well.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>height_model <span class="ot">&lt;-</span> <span class="fu">brm</span>(</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  winner <span class="sc">~</span> <span class="dv">1</span> <span class="sc">+</span> height_cm,</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">prior =</span> <span class="fu">prior</span>(<span class="fu">normal</span>(<span class="dv">0</span>, <span class="dv">2</span>), <span class="at">class =</span> <span class="st">"b"</span>) <span class="sc">+</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>          <span class="fu">prior</span>(<span class="fu">normal</span>(<span class="dv">0</span>, <span class="dv">2</span>), <span class="at">class =</span> <span class="st">"Intercept"</span>),</span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">family =</span> <span class="fu">bernoulli</span>(<span class="at">link =</span> <span class="st">"logit"</span>),</span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">data =</span> heights_long,</span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">seed =</span> <span class="dv">111</span>,</span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">refresh =</span> <span class="dv">0</span>,</span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">iter =</span> <span class="dv">12000</span>,</span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>  <span class="at">backend =</span> <span class="st">"cmdstanr"</span></span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Start sampling</code></pre>
+</div>
 <div class="cell-output cell-output-stdout">
-<pre><code>[1] 2</code></pre>
+<pre><code>Running MCMC with 4 sequential chains...
+
+Chain 1 finished in 0.2 seconds.
+Chain 2 finished in 0.2 seconds.
+Chain 3 finished in 0.2 seconds.
+Chain 4 finished in 0.2 seconds.
+
+All 4 chains finished successfully.
+Mean chain execution time: 0.2 seconds.
+Total execution time: 1.3 seconds.</code></pre>
+</div>
+</div>
+<p>Attempting to directly interpret coefficient values from logit models is rarely a good idea. Instead we can graph the results and compare the predicted probabilities of the outcome variable (winning the presidency) against a range of input variable values (candidate height in cm). This is what the (logit dotplot)[https://www.barelysignificant.com/post/glm/] below shows. The dots on the top and bottom of the graph represent candidates that either won or lost, and the line between them shows what our model predicts the winning probability to be at each height value on the x-axis. the weakly upward slope on this prediction line tells us that there is barely any benefit to being an extra cm taller when it comes to winning a presidential election.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Generate a set of values across the range of the height data</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>prediction_grid <span class="ot">&lt;-</span> <span class="fu">with</span>(heights_long, </span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">data.frame</span>(<span class="at">height_cm =</span> <span class="fu">seq</span>(<span class="fu">min</span>(height_cm), <span class="fu">max</span>(height_cm), <span class="at">length.out =</span> <span class="dv">100</span>))</span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>prediction_grid <span class="sc">|&gt;</span> </span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Generate posterior draws</span></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">add_epred_draws</span>(height_model, <span class="at">ndraws =</span> <span class="dv">100</span>) <span class="sc">|&gt;</span> </span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Collapse down to the height level</span></span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(height_cm) <span class="sc">|&gt;</span> </span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="at">.median =</span> <span class="fu">median</span>(.epred),</span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a>            <span class="at">.sd =</span> <span class="fu">sd</span>(.epred)) <span class="sc">|&gt;</span> </span>
+<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Convert log odds into predicted probabilities</span></span>
+<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">log_odds =</span> <span class="fu">dist_normal</span>(.median, .sd),</span>
+<span id="cb9-15"><a href="#cb9-15" aria-hidden="true" tabindex="-1"></a>         <span class="at">p_winner =</span> <span class="fu">dist_transformed</span>(log_odds, plogis, qlogis)) <span class="sc">|&gt;</span> </span>
+<span id="cb9-16"><a href="#cb9-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> height_cm)) <span class="sc">+</span></span>
+<span id="cb9-17"><a href="#cb9-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_dots</span>(</span>
+<span id="cb9-18"><a href="#cb9-18" aria-hidden="true" tabindex="-1"></a>    <span class="fu">aes</span>(<span class="at">y =</span> winner, <span class="at">side =</span> <span class="fu">ifelse</span>(winner <span class="sc">==</span> <span class="dv">1</span>, <span class="st">"bottom"</span>, <span class="st">"top"</span>)),</span>
+<span id="cb9-19"><a href="#cb9-19" aria-hidden="true" tabindex="-1"></a>    <span class="at">scale =</span> <span class="fl">0.4</span>,</span>
+<span id="cb9-20"><a href="#cb9-20" aria-hidden="true" tabindex="-1"></a>    <span class="at">fill =</span> <span class="st">"#931e18"</span>,</span>
+<span id="cb9-21"><a href="#cb9-21" aria-hidden="true" tabindex="-1"></a>    <span class="at">size =</span> .<span class="dv">1</span>,</span>
+<span id="cb9-22"><a href="#cb9-22" aria-hidden="true" tabindex="-1"></a>    <span class="at">data =</span> heights_long) <span class="sc">+</span></span>
+<span id="cb9-23"><a href="#cb9-23" aria-hidden="true" tabindex="-1"></a>  <span class="fu">stat_lineribbon</span>(</span>
+<span id="cb9-24"><a href="#cb9-24" aria-hidden="true" tabindex="-1"></a>    <span class="fu">aes</span>(<span class="at">ydist =</span> p_winner), <span class="at">alpha =</span> .<span class="dv">25</span>, <span class="at">fill =</span> <span class="st">"#931e18"</span>, <span class="at">size =</span> .<span class="dv">5</span>) <span class="sc">+</span></span>
+<span id="cb9-25"><a href="#cb9-25" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"Predicted Probability of Winning the Presidency</span><span class="sc">\n</span><span class="st">Based on Candidate Height"</span>,</span>
+<span id="cb9-26"><a href="#cb9-26" aria-hidden="true" tabindex="-1"></a>       <span class="at">x =</span> <span class="st">"Height cm"</span>,</span>
+<span id="cb9-27"><a href="#cb9-27" aria-hidden="true" tabindex="-1"></a>       <span class="at">y =</span> <span class="st">"Pr(Winning)"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="index_files/figure-html/unnamed-chunk-7-1.png" class="img-fluid" width="672"></p>
+</div>
+</div>
+<p>Apparently height has little effect on the probability that a candidate wins the presidency. But what if the candidate was <em>extremely</em> tall? It is now time to make a confession. The true reason I started this project was for selfish reasons. As someone who is 206 cm tall (6’ 9”), I wanted to know what my chances were of becoming president based only on my height. Plugging my 206 cm into the logistic regression model produces the posterior probability distribution shown in the graph below. While there is considerable uncertainty due to the small sample size of candidates, the model says I have between a 60 and 70% chance to win. Amazing!</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>prediction_grid <span class="ot">&lt;-</span> <span class="fu">with</span>(heights_long, </span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">data.frame</span>(<span class="at">height_cm =</span> <span class="dv">206</span>)</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>prediction_grid <span class="sc">|&gt;</span> </span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">add_epred_draws</span>(height_model, <span class="at">ndraws =</span> <span class="dv">12000</span>) <span class="sc">|&gt;</span> </span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">p_winner =</span> <span class="dv">1</span> <span class="sc">/</span> (<span class="dv">1</span> <span class="sc">+</span> <span class="fu">exp</span>(<span class="sc">-</span>.epred))) <span class="sc">|&gt;</span> </span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> p_winner)) <span class="sc">+</span></span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">stat_slabinterval</span>(<span class="at">fill =</span> <span class="st">"#04a3bd"</span>, <span class="at">trim =</span> <span class="cn">FALSE</span>) <span class="sc">+</span></span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"Posterior Probability of Winning</span><span class="sc">\n</span><span class="st">for Someone Very Tall"</span>,</span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a>       <span class="at">x =</span> <span class="st">"Pr(Winning | Height = 206 cm)"</span>,</span>
+<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a>       <span class="at">y =</span> <span class="st">""</span>) <span class="sc">+</span></span>
+<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span>(<span class="at">axis.line.y =</span> <span class="fu">element_blank</span>(),</span>
+<span id="cb10-14"><a href="#cb10-14" aria-hidden="true" tabindex="-1"></a>        <span class="at">axis.text.y =</span> <span class="fu">element_blank</span>())</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="index_files/figure-html/unnamed-chunk-8-1.png" class="img-fluid" width="672"></p>
+</div>
+</div>
+<p>As we all know, numbers don’t lie. So keep an eye out for the Bert–2024 campaign coming soon.</p>
+</section>
+<section id="session-info" class="level2">
+<h2 class="anchored" data-anchor-id="session-info">Session info</h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sessionInfo</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>R version 4.1.1 (2021-08-10)
+Platform: x86_64-apple-darwin17.0 (64-bit)
+Running under: macOS Big Sur 10.16
+
+Matrix products: default
+BLAS:   /Library/Frameworks/R.framework/Versions/4.1/Resources/lib/libRblas.0.dylib
+LAPACK: /Library/Frameworks/R.framework/Versions/4.1/Resources/lib/libRlapack.dylib
+
+locale:
+[1] en_US.UTF-8/en_US.UTF-8/en_US.UTF-8/C/en_US.UTF-8/en_US.UTF-8
+
+attached base packages:
+[1] stats     graphics  grDevices utils     datasets  methods   base     
+
+other attached packages:
+ [1] tidybayes_3.0.2.9000 geomtextpath_0.1.0   distributional_0.3.0
+ [4] brms_2.17.4          Rcpp_1.0.8.3         ggdist_3.0.99.9000  
+ [7] MetBrewer_0.2.0      rvest_1.0.2          forcats_0.5.1       
+[10] stringr_1.4.0        dplyr_1.0.9          purrr_0.3.4         
+[13] readr_2.1.2          tidyr_1.2.0          tibble_3.1.7        
+[16] ggplot2_3.3.6        tidyverse_1.3.1     
+
+loaded via a namespace (and not attached):
+  [1] readxl_1.3.1         backports_1.4.1      systemfonts_1.0.3   
+  [4] selectr_0.4-2        plyr_1.8.7           igraph_1.3.1        
+  [7] svUnit_1.0.6         splines_4.1.1        crosstalk_1.2.0     
+ [10] rstantools_2.2.0     inline_0.3.19        digest_0.6.29       
+ [13] htmltools_0.5.2      fansi_1.0.3          magrittr_2.0.3      
+ [16] checkmate_2.1.0      tzdb_0.2.0           modelr_0.1.8        
+ [19] RcppParallel_5.1.5   matrixStats_0.62.0   xts_0.12.1          
+ [22] prettyunits_1.1.1    colorspace_2.0-3     textshaping_0.3.6   
+ [25] haven_2.4.3          xfun_0.31            callr_3.7.0         
+ [28] crayon_1.5.1         jsonlite_1.8.0       lme4_1.1-27.1       
+ [31] zoo_1.8-10           glue_1.6.2           gtable_0.3.0        
+ [34] emmeans_1.7.2        V8_4.2.0             pkgbuild_1.3.1      
+ [37] rstan_2.26.11        abind_1.4-5          scales_1.2.0        
+ [40] mvtnorm_1.1-3        DBI_1.1.1            miniUI_0.1.1.1      
+ [43] viridisLite_0.4.0    xtable_1.8-4         stats4_4.1.1        
+ [46] StanHeaders_2.26.11  DT_0.23              htmlwidgets_1.5.4   
+ [49] httr_1.4.2           threejs_0.3.3        arrayhelpers_1.1-0  
+ [52] posterior_1.2.1      ellipsis_0.3.2       pkgconfig_2.0.3     
+ [55] loo_2.5.1            farver_2.1.0         dbplyr_2.1.1        
+ [58] utf8_1.2.2           labeling_0.4.2       tidyselect_1.1.2    
+ [61] rlang_1.0.2          reshape2_1.4.4       later_1.3.0         
+ [64] munsell_0.5.0        cellranger_1.1.0     tools_4.1.1         
+ [67] cli_3.3.0            generics_0.1.2       broom_0.8.0         
+ [70] ggridges_0.5.3       evaluate_0.15        fastmap_1.1.0       
+ [73] yaml_2.3.5           processx_3.5.3       knitr_1.39          
+ [76] fs_1.5.2             nlme_3.1-152         mime_0.12           
+ [79] projpred_2.0.2       xml2_1.3.2           compiler_4.1.1      
+ [82] bayesplot_1.9.0      shinythemes_1.2.0    rstudioapi_0.13     
+ [85] curl_4.3.2           gamm4_0.2-6          reprex_2.0.1        
+ [88] stringi_1.7.6        ps_1.7.0             Brobdingnag_1.2-7   
+ [91] lattice_0.20-44      Matrix_1.3-4         nloptr_1.2.2.2      
+ [94] markdown_1.1         shinyjs_2.1.0        tensorA_0.36.2      
+ [97] vctrs_0.4.1          pillar_1.7.0         lifecycle_1.0.1     
+[100] bridgesampling_1.1-2 estimability_1.3     data.table_1.14.2   
+[103] httpuv_1.6.5         R6_2.5.1             promises_1.2.0.1    
+[106] gridExtra_2.3        codetools_0.2-18     boot_1.3-28         
+[109] colourpicker_1.1.1   MASS_7.3-54          gtools_3.9.2.1      
+[112] assertthat_0.2.1     withr_2.5.0          shinystan_2.6.0     
+[115] mgcv_1.8-36          parallel_4.1.1       hms_1.1.1           
+[118] grid_4.1.1           coda_0.19-4          minqa_1.2.4         
+[121] cmdstanr_0.4.0       rmarkdown_2.14       shiny_1.7.1         
+[124] lubridate_1.7.10     base64enc_0.1-3      dygraphs_1.1.1.6    </code></pre>
 </div>
 </div>
 
 
+</section>
 
 </main> <!-- /main -->
 <script id="quarto-html-after-body" type="application/javascript">
