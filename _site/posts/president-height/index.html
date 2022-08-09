@@ -198,6 +198,8 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 
 
 
+<section id="does-height-matter-when-running-for-president" class="level2">
+<h2 class="anchored" data-anchor-id="does-height-matter-when-running-for-president">Does Height Matter When Running for President?</h2>
 <p>Height is supposed to confer all sorts of advantages in life. Taller people make more money, have an easier time finding romantic partners, and can reach things off the highest shelves without using a step stool. But does height matter when it comes to politics? The topic has been the subject of extensive debate—so much so that a <a href="https://en.wikipedia.org/wiki/Heights_of_presidents_and_presidential_candidates_of_the_United_States">Wikipedia page</a> was written to provide information on the heights of US presidential candidates. In this post I analyze this debate quantitatively using R and Bayesian regression methods. My results conclusively show that height probably doesn’t matter much when it comes to winning the presidency.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Loading in the packages used</span></span>
@@ -217,6 +219,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a><span class="fu">options</span>(<span class="at">scipen =</span> <span class="dv">1</span>, </span>
 <span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>        <span class="at">digits =</span> <span class="dv">3</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
+</section>
 <section id="getting-the-data" class="level2">
 <h2 class="anchored" data-anchor-id="getting-the-data">Getting the data</h2>
 <p>The first thing to do is gather the data on presidential candidate heights. The package <a href="https://rvest.tidyverse.org/">rvest</a> is a great way to scrape the Wikipedia page above. It’s pretty easy to get data off Wikipedia because the HTML is relatively simple. But tables of data on Wikipedia need a bit of cleaning before they can be used for any statistical analysis. You have to remove things like citation markers, as well as fix column names and make sure columns containing numbers are actually <code>numeric</code> types.</p>
