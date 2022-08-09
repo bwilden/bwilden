@@ -4,7 +4,7 @@ author: "Bertrand Wilden"
 date: "2022-08-09"
 categories: [Bayes]
 image: abrahamlincolngenerals.jpeg
-abstract: ""
+max-description-length: 20
 ---
 
 ## Does Height Matter When Running for President?
