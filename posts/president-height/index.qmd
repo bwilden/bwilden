@@ -3,7 +3,7 @@ title: "Does Height Matter When Running for President?"
 author: "Bertrand Wilden"
 date: "2022-08-09"
 categories: [Bayes]
-image: image.jpg
+image: abrahamlincolngenerals.jpeg
 ---
 
 Height is supposed to confer all sorts of advantages in life. Taller people make more money, have an easier time finding romantic partners, and can reach things off the highest shelves without using a step stool. But does height matter when it comes to politics? The topic has been the subject of extensive debate---so much so that a [Wikipedia page](https://en.wikipedia.org/wiki/Heights_of_presidents_and_presidential_candidates_of_the_United_States) was written to provide information on the heights of US presidential candidates. In this post I analyze this debate quantitatively using R and Bayesian regression methods. My results conclusively show that height probably doesn't matter much when it comes to winning the presidency.
