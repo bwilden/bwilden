@@ -4,10 +4,11 @@ project:
 website:
   title: "Bertrand Wilden"
   site-url: https://www.bwilden.com
-  description: "Bertrand Wilden's Blog"
+  description: "Bertrand Wilden's Personal Website"
   navbar:
     right:
-      - about.qmd
+      - text: Blog
+        href: blog.qmd
       - icon: github
         href: https://github.com/bwilden
       - icon: twitter

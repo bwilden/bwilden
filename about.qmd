@@ -13,6 +13,6 @@ about:
 
 ---
 
-Hi! I am a PhD Candidate at UC San Diego working on a degree in Political Science with a Specialization in Computational Social Science. My research involves building Bayesian statistical models to measure latent variables such as political ideology. I am also interested in open source software development in R.
+Hi! I am a data scientist and PhD Candidate at UC San Diego working on a degree in Political Science with a Specialization in Computational Social Science. My research involves building Bayesian statistical models to measure latent variables such as political ideology. I am also interested in open source software development in R.
 
 When waiting for my MCMC chains to finish I like to rock climb, play board games, and go backpacking.

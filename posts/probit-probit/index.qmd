@@ -300,3 +300,4 @@ pp_check(fit_hurdle, ndraws = 100)
 ```
 
 We see that the model does an okay job recovering the 0's (no), 1's (yes), and 2's (abstain) from the original data.
+
