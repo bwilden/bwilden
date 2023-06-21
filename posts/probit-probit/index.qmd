@@ -1,8 +1,8 @@
 ---
-title: "Probit and Hurdle Probit Modeling"
+title: "Probing the Depths of Probit Regression"
 author: "Bertrand Wilden"
-date: "2023-01-10"
-categories: [Bayes]
+date: "2023-06-21"
+categories: [Bayes, Tutorial]
 max-description-length: 20
 ---
 
@@ -21,7 +21,9 @@ library(ggdist)
 theme_set(theme_minimal())
 ```
 
-When do you use a probit model in statistics? When you have some data and want to probe it for answers! It is a method for modeling a data generating process which results in a binary 0/1 outcome. Maybe you are trying to explain whether someone votes in a particular election, whether a web user clicks on a link, or whether writing statistics blog posts helps its author get a job. Probit models are closely related to their more popular cousin: the logistic, or logit regression. So closely related, in fact, that I can't think of any decisive reason why someone would choose one over the other. I like probit regression because of the pun potential. I always aspire to maintain a high level of statistical probity in my work. In this post I am going to explain what a probit model is introduce a brand new nested probit model.
+When do you use a probit model in statistics? When you have some data and want to probe it for answers! 
+
+It is also a method for modeling a data generating process which results in a binary 0/1 outcome. Maybe you are trying to explain whether someone votes in a particular election, whether a web user clicks on a link, or whether writing statistics blog posts helps its author get a job. Probit models are closely related to their more popular cousin: the logistic, or logit regression. So closely related, in fact, that I can't think of any decisive reason why someone would choose one over the other. I like probit regression because I always aspire to maintain a high level of statistical probity in my work. In this post I am going to explain what a probit model is, how to fit one in R, and introduce a brand new nested hurdle probit model.
 
 ## What is a Probit Model?
 
@@ -60,13 +62,13 @@ ggplot() +
   scale_x_continuous(breaks = seq(-4, 4, by = .5)) +
   scale_y_continuous(breaks = seq(0, 1, by = .1)) +
   labs(title = "Standard Normal CDF",
-       x = "x",
+       x = "X",
        y = "Cumulative Probability")
 ```
 
 If we supply $\Phi$ with an input of 1.5, it gives us an output of `r round(pnorm(1.5), 2)`.
 
-The standard Normal CDF's ability to turn any real number into a probability between 0 and 1 is what allows us to build a model for $p_i$, which then tells us something about the Bernoulli distributions which produced our binary outcome variable $y_i$. As an aside, the difference between probit and logit models comes down to how they transform the linear predictor to the probability scale. Probit uses $\Phi$ and logit uses something called a log-odds transformation.[^2] This changes the scale of the $\beta$ parameters, and therefore informs us about the scale of priors we should use in our regression, but otherwise the two models are the same.
+The standard Normal CDF's ability to turn any real number into a probability between 0 and 1 is what allows us to build a model for $p_i$, which then tells us something about the Bernoulli distributions which produced our binary outcome variable $y_i$. As an aside, the difference between probit and logit models comes down to how they transform the linear predictor to the probability scale. Probit uses $\Phi$ and logit uses something called a log-odds transformation.[^2] This changes the scale of the $\beta$ parameters, and therefore how to interpret their values plus informing us about what prior values we should assign, but otherwise the two models are the same.
 
 [^2]: $\text{ln}\left(\frac{x}{1-x}\right)$
 
@@ -99,20 +101,22 @@ un <- un |>
          date < as.Date("1991-12-26"))
 ```
 
-Next, let's assemble our predictor variables. Now I'm no international relations expert, but I conjecture that one of the best ways to predict how the US will vote on a resolution is by looking at how its longtime foe the USSR voted. Naturally this limits our analysis to the time period before Christmas day 1991---which calls into question our use of the word "prediction". What does it mean to predict events which took place over 30 years ago? Let's just overlook this detail for the sake of exposition.
+Next, let's assemble our predictor variables. Now I'm no international relations expert, but I conjecture that one of the best ways to predict how the US will vote on a resolution is by looking at how its longtime foe the USSR voted. Naturally this limits our analysis to the time period before Christmas day 1991---which calls into question our use of the word "prediction". What does it mean to predict events which took place over 30 years ago? Let's overlook this detail for the sake of exposition.
 
 In addition to a variable for how the USSR voted on resolutions, we will include a variable in the model for the issue, or topic, of each resolution. I created a new category called "Other" which contains resolutions with missing `NA` issues so that these observations are still included in the analysis.
 
 ```{r}
+#| warning: false
 un |> 
   janitor::tabyl(issue)
 ```
 
-Now we can finally fit our model! This is a very simple probit regression so we can use the [brms R package](https://paul-buerkner.github.io/brms/). Because all our predictor variables are categorical, we'll use the `0 + ...` formula syntax for [index coding](https://bookdown.org/content/4857/the-many-variables-the-spurious-waffles.html#categorical-variables). The code `prior(normal(0, 2), class = b)` sets weakly informative priors for the coefficients on all these variables (notice how on the standard Normal CDF graph above almost all the probability changes occur between the values -2 and 2). We include `bernoulli(link = "probit")` to ensure `brm` knows we want to run a probit model.
+Now we can finally fit our model! This is a very simple probit regression so we can use the [brms R package](https://paul-buerkner.github.io/brms/). Because all our predictor variables are categorical, we'll use the `0 + ...` formula syntax for [index coding](https://bookdown.org/content/4857/the-many-variables-the-spurious-waffles.html#categorical-variables). The code `prior(normal(0, 2), class = b)` sets weakly informative priors for the coefficients on all these variables (notice how on the standard Normal CDF graph above almost all the probability changes occur between the values -2 and 2). We also need to include `bernoulli(link = "probit")` to ensure that `brm()` knows we want to run a probit model.
 
 ```{r}
 #| cache: true
 #| message: false
+#| warning: false
 fit_probit <- brm(
   bf(vote ~ 0 + issue + ussr_vote),
   prior = prior(normal(0, 2), class = b),
@@ -126,7 +130,7 @@ fit_probit <- brm(
 )
 ```
 
-Let's run a quick posterior-predictive check to make sure there are no glaring issues with our model.
+Let's run a quick posterior-predictive check to make sure there are no glaring issues with our model. The $y$ line in the graph below shows the actual distribution of 1's and 0's in our data, and the $y_{rep}$ lines show different draws from the [posterior predictive distribution](https://mc-stan.org/bayesplot/reference/PPC-overview.html).
 
 ```{r}
 pp_check(fit_probit, ndraws = 100)
@@ -149,7 +153,7 @@ fit_probit |>
 
 Now that we're probit model experts, let's try something a little more interesting. Remember those abstentions we left out of the previous model? It's time to add them back in. 
 
-There are multiple ways to construct a model with three possible outcomes (yes, no, abstain), but one of the most intuitive is to add a hurdle process to our original probit model. A hurdle model has two parts: first, we model whether some event will take place or not, then, conditional on the event taking place (aka overcoming the hurdle), we model the outcome of the event. So in our United Nations resolution example, the hurdle in question is whether a country takes any vote or abstains from voting. Then, if we predict that the country votes at all, we predict whether it will vote "yes" or "no" on the resolution.
+There are multiple ways to construct a model with three possible outcomes (yes, no, abstain), but one of the most intuitive is to add a hurdle process to our original probit model. A hurdle model has two parts: first, we model whether some event will take place or not, then, conditional on the event taking place (i.e. overcoming the hurdle), we model the outcome of the event. So in our United Nations resolution example, the hurdle in question is whether a country takes any vote or abstains from voting. Then, if we predict that the country votes at all, we subsequently predict whether it will vote "yes" or "no" on the resolution.
 
 We've covered how to model whether a country will vote "yes" or "no", but how do we model whether a country votes or abstains? The decision whether to vote or not to vote is itself a binary outcome---so we get to use the probit model once again! Two probits in one model! I'm still trying to come up with a catchy name for this type of hurdle probit model---ChatGPT was not much help:
 
@@ -167,7 +171,7 @@ hurdle_probit <- custom_family(
   type = "int")
 ```
 
-First we define a `custom_family()` with two distributional parameters, or `dpars`. The `mu` parameter corresponds to the yes/no part of the model and `theta` corresponds to the hurdle part. There is nothing special about choosing the label "theta" here. We're just following some [common notation](https://mc-stan.org/docs/2_20/stan-users-guide/zero-inflated-section.html).
+First we define a `custom_family()` with two distributional parameters, or `dpars`. The `mu` parameter corresponds to the yes/no part of the model and `theta` corresponds to the hurdle part. Unlike "mu" (which is required from **brms**), there is nothing special about choosing the label "theta" here. We're just following some [common notation](https://mc-stan.org/docs/2_20/stan-users-guide/zero-inflated-section.html).
 
 ```{r}
 stan_funs <- "
@@ -185,7 +189,7 @@ stanvars <- stanvar(scode = stan_funs, block = "functions")
 
 Next we need to write a new Stan function for **brms** to use. Note the conditional statement `y == 2` which corresponds to an abstention in our original data.
 
-When building a new, and more complicated model like this it is a good idea to run a quick simulation to ensure things are working as expected. Our goal here is to determine whether the model can recover the parameters we used to generate a synthetic data set.
+When building a new, and more complicated model like this it is a good idea to run a quick simulation to ensure things are working as expected. Our goal here is to determine whether the model can recover the same parameters we used to generate a synthetic data set. In the simulation code below, these parameters correspond to `x_coef` and `z_coef`.
 
 ```{r}
 N <- 1000
@@ -194,18 +198,13 @@ z_coef <- 2
 
 hurdle_sim_data <- tibble(
   x = rnorm(N), # random variable affecting yes/no
-  z = rnorm(N) # random variable affecting hurdle
+  z = rnorm(N)  # random variable affecting hurdle
 ) |> 
-  mutate(# probability of voting or abstaining
-         pr_abstain = pnorm(z * z_coef), 
-         # convert probability to binary abstain/vote
-         abstain = rbinom(n(), 1, prob = pr_abstain),
-         # probability of yes or no
-         pr_yes = pnorm(x * x_coef),
-         # convert probability to yes/no
-         yes = rbinom(n(), 1, prob = pr_yes),
-         # final realized outcome
-         y = case_when(abstain == 1 ~ 2,
+  mutate(pr_abstain = pnorm(z * z_coef),              # probability of voting or abstaining
+         abstain = rbinom(n(), 1, prob = pr_abstain), # binary abstain/vote
+         pr_yes = pnorm(x * x_coef),                  # probability of yes or no
+         yes = rbinom(n(), 1, prob = pr_yes),         # binary yes/no
+         y = case_when(abstain == 1 ~ 2,              # final realized outcome
                        yes == 1 ~ 1,
                        yes == 0 ~ 0))
 ```
@@ -243,7 +242,7 @@ glm(abstain ~ z,
   broom::tidy()
 ```
 
-Above we see the effect of `z` on whether a row in our simulated data was marked "abstain". The coefficient is the same as `theta_z` in the hurdle model.
+Above we see the effect of `z` on whether an observation in our simulated data was marked "abstain" or not. Note that the coefficient estimate is the same as `theta_z` in the full hurdle model above.
 
 ```{r}
 glm(yes ~ x, 
@@ -252,13 +251,14 @@ glm(yes ~ x,
   broom::tidy()
 ```
 
-And here we see the effect of `x` on the realized outcome `y` in the simulated data (after excluding the abstentions). The coefficient estimate in this model nicely replicates the `x` estimate on the hurdle model.
+And here we see the effect of `x` on the realized outcome `y` in the simulated data (after excluding the abstentions). Again, the coefficient estimate in this model nicely replicates the `x` estimate from the full hurdle model above.
 
 Now that we're confident the hurdle probit model is working as intended, we can fit it to the real-world UN data we prepared earlier. We'll keep the part of the model predicting yes/no votes the same (i.e. using resolution issue and USSR vote variables as predictors). How should we predict whether the US votes or abstains from a particular resolution? Luckily for us, the **unvotes** data comes with a variable `importantvote`. Again, I'm no international relations expert but maybe if a resolution is deemed to be "important" the US will be more likely to weigh in---for or against.
 
 ```{r}
 #| cache: true
 #| message: false
+#| warning: false
 fit_hurdle <- brm(
   bf(vote ~ 0 + issue + ussr_vote, # yes/no model
      theta ~ importantvote),       # abstain/vote model
