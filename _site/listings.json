@@ -5,5 +5,12 @@
       "/posts/probit-probit/index.html",
       "/posts/president-height/index.html"
     ]
+  },
+  {
+    "listing": "/blog.html",
+    "items": [
+      "/posts/probit-probit/index.html",
+      "/posts/president-height/index.html"
+    ]
   }
 ]
