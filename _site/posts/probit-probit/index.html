@@ -119,7 +119,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
           <div class="collapse navbar-collapse" id="navbarCollapse">
             <ul class="navbar-nav navbar-nav-scroll ms-auto">
   <li class="nav-item">
-    <a class="nav-link" href="../../blog.qmd" rel="" target="">
+    <a class="nav-link" href="../../blog.html" rel="" target="">
  <span class="menu-text">Blog</span></a>
   </li>  
   <li class="nav-item compact">
@@ -146,6 +146,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       <h1 class="title">Probing the Depths of Probit Regression</h1>
                                 <div class="quarto-categories">
                 <div class="quarto-category">Bayes</div>
+                <div class="quarto-category">brms</div>
                 <div class="quarto-category">Tutorial</div>
               </div>
                   </div>
@@ -213,7 +214,7 @@ p_i = \Phi(\beta_0 + \beta_1X_{1i} + \beta_2X_{2i} + \beta_3X_{3i})
 <p>What is <span class="math inline">\(\Phi\)</span> and how does it work? It represents the cumulative distribution function (CDF) for a standard Normal distribution, which means that it takes as input any real number and gives you back the probability of getting that value or less out of a standard Normal distribution.<a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a> The graph below shows what this function looks like.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>() <span class="sc">+</span></span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">stat_function</span>(<span class="at">fun =</span> pnorm,</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">stat_function</span>(<span class="at">fun =</span> pnorm, <span class="co"># pnorm is the Normal CDF function in R</span></span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>                <span class="at">xlim =</span> <span class="fu">c</span>(<span class="sc">-</span><span class="dv">4</span>, <span class="dv">4</span>)) <span class="sc">+</span></span>
 <span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_segment</span>(<span class="fu">aes</span>(<span class="at">x =</span> <span class="fl">1.5</span>, <span class="at">xend =</span> <span class="fl">1.5</span>, <span class="at">y =</span> <span class="dv">0</span>, <span class="at">yend =</span> <span class="fu">pnorm</span>(<span class="fl">1.5</span>)),</span>
 <span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>                   <span class="at">color =</span> <span class="st">"red"</span>, <span class="at">linetype =</span> <span class="st">"dashed"</span>) <span class="sc">+</span></span>
@@ -229,7 +230,7 @@ p_i = \Phi(\beta_0 + \beta_1X_{1i} + \beta_2X_{2i} + \beta_3X_{3i})
 </div>
 </div>
 <p>If we supply <span class="math inline">\(\Phi\)</span> with an input of 1.5, it gives us an output of 0.93.</p>
-<p>The standard Normal CDF’s ability to turn any real number into a probability between 0 and 1 is what allows us to build a model for <span class="math inline">\(p_i\)</span>, which then tells us something about the Bernoulli distributions which produced our binary outcome variable <span class="math inline">\(y_i\)</span>. As an aside, the difference between probit and logit models comes down to how they transform the linear predictor to the probability scale. Probit uses <span class="math inline">\(\Phi\)</span> and logit uses something called a log-odds transformation.<a href="#fn2" class="footnote-ref" id="fnref2" role="doc-noteref"><sup>2</sup></a> This changes the scale of the <span class="math inline">\(\beta\)</span> parameters, and therefore how to interpret their values plus informing us about what prior values we should assign, but otherwise the two models are the same.</p>
+<p>The standard Normal CDF’s ability to turn any real number into a probability between 0 and 1 is what allows us to build a model for <span class="math inline">\(p_i\)</span>, which then tells us something about the Bernoulli distributions which produced our binary outcome variable <span class="math inline">\(y_i\)</span>. As an aside, the difference between probit and logit models comes down to how they transform the linear predictor to the probability scale. Probit uses <span class="math inline">\(\Phi\)</span> and logit uses the log-odds transformation.<a href="#fn2" class="footnote-ref" id="fnref2" role="doc-noteref"><sup>2</sup></a> This changes the scale of the <span class="math inline">\(\beta\)</span> parameters, and therefore how to interpret their values plus informing us about what prior values we should assign, but otherwise the two models are the same.</p>
 </section>
 <section id="the-probit-model-in-action" class="level2">
 <h2 class="anchored" data-anchor-id="the-probit-model-in-action">The Probit Model in Action</h2>
@@ -303,8 +304,8 @@ Total execution time: 5.1 seconds.</code></pre>
 </div>
 <p>Nice—the model is able to generally predict the 1’s and 0’s it was trained on.</p>
 </section>
-<section id="yo-dawg-i-heard-you-like-probit-models" class="level2">
-<h2 class="anchored" data-anchor-id="yo-dawg-i-heard-you-like-probit-models">Yo Dawg I heard you like Probit Models</h2>
+<section id="two-probit-to-quit" class="level2">
+<h2 class="anchored" data-anchor-id="two-probit-to-quit">Two Probit to Quit</h2>
 <p>Now that we’re probit model experts, let’s try something a little more interesting. Remember those abstentions we left out of the previous model? It’s time to add them back in.</p>
 <p>There are multiple ways to construct a model with three possible outcomes (yes, no, abstain), but one of the most intuitive is to add a hurdle process to our original probit model. A hurdle model has two parts: first, we model whether some event will take place or not, then, conditional on the event taking place (i.e.&nbsp;overcoming the hurdle), we model the outcome of the event. So in our United Nations resolution example, the hurdle in question is whether a country takes any vote or abstains from voting. Then, if we predict that the country votes at all, we subsequently predict whether it will vote “yes” or “no” on the resolution.</p>
 <p>We’ve covered how to model whether a country will vote “yes” or “no”, but how do we model whether a country votes or abstains? The decision whether to vote or not to vote is itself a binary outcome—so we get to use the probit model once again! Two probits in one model! I’m still trying to come up with a catchy name for this type of hurdle probit model—ChatGPT was not much help:</p>
@@ -374,14 +375,14 @@ Total execution time: 5.1 seconds.</code></pre>
 <div class="cell-output cell-output-stdout">
 <pre><code>Running MCMC with 4 parallel chains...
 
-Chain 1 finished in 2.2 seconds.
+Chain 3 finished in 2.0 seconds.
+Chain 1 finished in 2.1 seconds.
 Chain 2 finished in 2.1 seconds.
-Chain 3 finished in 2.1 seconds.
 Chain 4 finished in 2.2 seconds.
 
 All 4 chains finished successfully.
-Mean chain execution time: 2.2 seconds.
-Total execution time: 2.4 seconds.</code></pre>
+Mean chain execution time: 2.1 seconds.
+Total execution time: 2.3 seconds.</code></pre>
 </div>
 </div>
 <div class="cell">
@@ -469,6 +470,10 @@ Total execution time: 23.8 seconds.</code></pre>
 </div>
 </div>
 <p>We see that the model does an okay job recovering the 0’s (no), 1’s (yes), and 2’s (abstain) from the original data.</p>
+</section>
+<section id="concluding-thoughts" class="level2">
+<h2 class="anchored" data-anchor-id="concluding-thoughts">Concluding Thoughts</h2>
+<p>If you’re tackling a data problem involving binary outcomes and aiming to explicitly model abstentions, consider taking the trippy hurdle probit model for a spin.</p>
 
 
 </section>

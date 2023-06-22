@@ -2,7 +2,7 @@
 title: "Probing the Depths of Probit Regression"
 author: "Bertrand Wilden"
 date: "2023-06-21"
-categories: [Bayes, Tutorial]
+categories: [Bayes, brms, Tutorial]
 max-description-length: 20
 ---
 
@@ -53,7 +53,7 @@ What is $\Phi$ and how does it work? It represents the cumulative distribution f
 
 ```{r}
 ggplot() +
-  stat_function(fun = pnorm,
+  stat_function(fun = pnorm, # pnorm is the Normal CDF function in R
                 xlim = c(-4, 4)) +
   geom_segment(aes(x = 1.5, xend = 1.5, y = 0, yend = pnorm(1.5)),
                    color = "red", linetype = "dashed") +
@@ -68,7 +68,7 @@ ggplot() +
 
 If we supply $\Phi$ with an input of 1.5, it gives us an output of `r round(pnorm(1.5), 2)`.
 
-The standard Normal CDF's ability to turn any real number into a probability between 0 and 1 is what allows us to build a model for $p_i$, which then tells us something about the Bernoulli distributions which produced our binary outcome variable $y_i$. As an aside, the difference between probit and logit models comes down to how they transform the linear predictor to the probability scale. Probit uses $\Phi$ and logit uses something called a log-odds transformation.[^2] This changes the scale of the $\beta$ parameters, and therefore how to interpret their values plus informing us about what prior values we should assign, but otherwise the two models are the same.
+The standard Normal CDF's ability to turn any real number into a probability between 0 and 1 is what allows us to build a model for $p_i$, which then tells us something about the Bernoulli distributions which produced our binary outcome variable $y_i$. As an aside, the difference between probit and logit models comes down to how they transform the linear predictor to the probability scale. Probit uses $\Phi$ and logit uses the log-odds transformation.[^2] This changes the scale of the $\beta$ parameters, and therefore how to interpret their values plus informing us about what prior values we should assign, but otherwise the two models are the same.
 
 [^2]: $\text{ln}\left(\frac{x}{1-x}\right)$
 
@@ -149,7 +149,7 @@ fit_probit |>
   stat_slabinterval(fill = "steelblue")
 ```
 
-## Yo Dawg I heard you like Probit Models
+## Two Probit to Quit
 
 Now that we're probit model experts, let's try something a little more interesting. Remember those abstentions we left out of the previous model? It's time to add them back in. 
 
@@ -301,3 +301,6 @@ pp_check(fit_hurdle, ndraws = 100)
 
 We see that the model does an okay job recovering the 0's (no), 1's (yes), and 2's (abstain) from the original data.
 
+## Concluding Thoughts
+
+If you're tackling a data problem involving binary outcomes and aiming to explicitly model abstentions, consider taking the trippy hurdle probit model for a spin. 
