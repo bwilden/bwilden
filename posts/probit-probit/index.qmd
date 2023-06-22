@@ -218,6 +218,7 @@ hurdle_sim_data <- tibble(
 The synthetic data `hurdle_sim_data` can now be fed into a model using the custom family we created above.
 
 ```{r}
+#| cache: true
 fit_sim <- brm(
   bf(y ~ x,      # yes/no part
      theta ~ z), # hurdle part

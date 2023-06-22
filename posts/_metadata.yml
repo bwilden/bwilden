@@ -8,3 +8,6 @@ freeze: true
 title-block-banner: true
 
 author: 'Bertrand Wilden'
+
+toc: true
+toc-depth: 3

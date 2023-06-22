@@ -101,7 +101,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <link rel="stylesheet" href="../../styles.css">
 </head>
 
-<body class="nav-fixed fullcontent">
+<body class="nav-fixed">
 
 <div id="quarto-search-results"></div>
   <header id="quarto-header" class="headroom fixed-top">
@@ -176,7 +176,18 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   </header><div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
 <!-- sidebar -->
 <!-- margin-sidebar -->
-    
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#what-is-a-probit-model" id="toc-what-is-a-probit-model" class="nav-link active" data-scroll-target="#what-is-a-probit-model">What is a Probit Model?</a></li>
+  <li><a href="#the-probit-model-in-action" id="toc-the-probit-model-in-action" class="nav-link" data-scroll-target="#the-probit-model-in-action">The Probit Model in Action</a></li>
+  <li><a href="#two-probit-to-quit" id="toc-two-probit-to-quit" class="nav-link" data-scroll-target="#two-probit-to-quit">Two Probit to Quit</a></li>
+  <li><a href="#concluding-thoughts" id="toc-concluding-thoughts" class="nav-link" data-scroll-target="#concluding-thoughts">Concluding Thoughts</a></li>
+  </ul>
+</nav>
+    </div>
 <!-- main -->
 <main class="content quarto-banner-title-block" id="quarto-document-content">
 
@@ -364,7 +375,7 @@ Total execution time: 5.1 seconds.</code></pre>
 <span id="cb12-15"><a href="#cb12-15" aria-hidden="true" tabindex="-1"></a>                       yes <span class="sc">==</span> <span class="dv">0</span> <span class="sc">~</span> <span class="dv">0</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>The synthetic data <code>hurdle_sim_data</code> can now be fed into a model using the custom family we created above.</p>
-<div class="cell">
+<div class="cell" data-hash="index_cache/html/unnamed-chunk-13_6beae9a5af26c972fe0b1919f6ae03ca">
 <div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>fit_sim <span class="ot">&lt;-</span> <span class="fu">brm</span>(</span>
 <span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">bf</span>(y <span class="sc">~</span> x,      <span class="co"># yes/no part</span></span>
 <span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>     theta <span class="sc">~</span> z), <span class="co"># hurdle part</span></span>
@@ -383,7 +394,7 @@ Total execution time: 5.1 seconds.</code></pre>
 <pre><code>Running MCMC with 4 parallel chains...
 
 Chain 2 finished in 2.1 seconds.
-Chain 1 finished in 2.2 seconds.
+Chain 1 finished in 2.1 seconds.
 Chain 3 finished in 2.1 seconds.
 Chain 4 finished in 2.1 seconds.
 
