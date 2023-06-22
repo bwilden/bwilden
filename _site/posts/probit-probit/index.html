@@ -184,6 +184,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 
 <div class="cell">
+<style type="text/css">
+.title {
+  color: #f5f5f5;
+}
+</style>
+</div>
+<div class="cell">
 <div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Packages and Global Options</span></span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyverse)</span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(brms)</span>
@@ -226,7 +233,7 @@ p_i = \Phi(\beta_0 + \beta_1X_{1i} + \beta_2X_{2i} + \beta_3X_{3i})
 <span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>       <span class="at">x =</span> <span class="st">"X"</span>,</span>
 <span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>       <span class="at">y =</span> <span class="st">"Cumulative Probability"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
-<p><img src="index_files/figure-html/unnamed-chunk-2-1.png" class="img-fluid" width="672"></p>
+<p><img src="index_files/figure-html/unnamed-chunk-3-1.png" class="img-fluid" width="672"></p>
 </div>
 </div>
 <p>If we supply <span class="math inline">\(\Phi\)</span> with an input of 1.5, it gives us an output of 0.93.</p>
@@ -270,7 +277,7 @@ p_i = \Phi(\beta_0 + \beta_1X_{1i} + \beta_2X_{2i} + \beta_3X_{3i})
 </div>
 </div>
 <p>Now we can finally fit our model! This is a very simple probit regression so we can use the <a href="https://paul-buerkner.github.io/brms/">brms R package</a>. Because all our predictor variables are categorical, we’ll use the <code>0 + ...</code> formula syntax for <a href="https://bookdown.org/content/4857/the-many-variables-the-spurious-waffles.html#categorical-variables">index coding</a>. The code <code>prior(normal(0, 2), class = b)</code> sets weakly informative priors for the coefficients on all these variables (notice how on the standard Normal CDF graph above almost all the probability changes occur between the values -2 and 2). We also need to include <code>bernoulli(link = "probit")</code> to ensure that <code>brm()</code> knows we want to run a probit model.</p>
-<div class="cell" data-hash="index_cache/html/unnamed-chunk-6_a87bbd068301dfa84c3695067c41507b">
+<div class="cell" data-hash="index_cache/html/unnamed-chunk-7_996e12c068eefa614fb80806ec161279">
 <div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>fit_probit <span class="ot">&lt;-</span> <span class="fu">brm</span>(</span>
 <span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">bf</span>(vote <span class="sc">~</span> <span class="dv">0</span> <span class="sc">+</span> issue <span class="sc">+</span> ussr_vote),</span>
 <span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">prior =</span> <span class="fu">prior</span>(<span class="fu">normal</span>(<span class="dv">0</span>, <span class="dv">2</span>), <span class="at">class =</span> b),</span>
@@ -285,13 +292,13 @@ p_i = \Phi(\beta_0 + \beta_1X_{1i} + \beta_2X_{2i} + \beta_3X_{3i})
 <div class="cell-output cell-output-stdout">
 <pre><code>Running MCMC with 4 parallel chains...
 
-Chain 4 finished in 4.5 seconds.
-Chain 1 finished in 4.8 seconds.
-Chain 2 finished in 5.0 seconds.
-Chain 3 finished in 4.9 seconds.
+Chain 3 finished in 4.4 seconds.
+Chain 2 finished in 4.6 seconds.
+Chain 4 finished in 4.7 seconds.
+Chain 1 finished in 4.9 seconds.
 
 All 4 chains finished successfully.
-Mean chain execution time: 4.8 seconds.
+Mean chain execution time: 4.7 seconds.
 Total execution time: 5.1 seconds.</code></pre>
 </div>
 </div>
@@ -299,7 +306,7 @@ Total execution time: 5.1 seconds.</code></pre>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="fu">pp_check</span>(fit_probit, <span class="at">ndraws =</span> <span class="dv">100</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
-<p><img src="index_files/figure-html/unnamed-chunk-7-1.png" class="img-fluid" width="672"></p>
+<p><img src="index_files/figure-html/unnamed-chunk-8-1.png" class="img-fluid" width="672"></p>
 </div>
 </div>
 <p>Nice—the model is able to generally predict the 1’s and 0’s it was trained on.</p>
@@ -375,9 +382,9 @@ Total execution time: 5.1 seconds.</code></pre>
 <div class="cell-output cell-output-stdout">
 <pre><code>Running MCMC with 4 parallel chains...
 
-Chain 1 finished in 2.1 seconds.
 Chain 2 finished in 2.1 seconds.
-Chain 3 finished in 2.0 seconds.
+Chain 1 finished in 2.2 seconds.
+Chain 3 finished in 2.1 seconds.
 Chain 4 finished in 2.1 seconds.
 
 All 4 chains finished successfully.
@@ -388,11 +395,11 @@ Total execution time: 2.3 seconds.</code></pre>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="fu">fixef</span>(fit_sim)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>                   Estimate  Est.Error        Q2.5      Q97.5
-Intercept        0.03443466 0.06680660 -0.09861857  0.1680562
-theta_Intercept  0.04426272 0.05947186 -0.07504551  0.1635512
-x               -1.06246395 0.08840567 -1.23625175 -0.8991952
-theta_z          2.13310869 0.12449412  1.89234900  2.3782158</code></pre>
+<pre><code>                   Estimate  Est.Error       Q2.5       Q97.5
+Intercept       -0.01391639 0.06639284 -0.1390825  0.11676975
+theta_Intercept -0.03150056 0.05460410 -0.1343178  0.07642558
+x               -0.93124834 0.08551786 -1.0999510 -0.76858800
+theta_z          1.98504156 0.11159384  1.7738840  2.21075475</code></pre>
 </div>
 </div>
 <p>Taking a look at the coefficient estimates from our simulation model we see that we get roughly the same values as those that were used to generate the synthetic data! And just to further tie everything together, we can separate the two parts of the full hurdle model out and check the results.</p>
@@ -406,8 +413,8 @@ theta_z          2.13310869 0.12449412  1.89234900  2.3782158</code></pre>
 <pre><code># A tibble: 2 × 5
   term        estimate std.error statistic  p.value
   &lt;chr&gt;          &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;    &lt;dbl&gt;
-1 (Intercept)   0.0448    0.0583     0.768 4.42e- 1
-2 z             2.13      0.124     17.2   5.72e-66</code></pre>
+1 (Intercept)  -0.0315    0.0559    -0.563 5.73e- 1
+2 z             1.99      0.113     17.6   1.19e-69</code></pre>
 </div>
 </div>
 <p>Above we see the effect of <code>z</code> on whether an observation in our simulated data was marked “abstain” or not. Note that the coefficient estimate is the same as <code>theta_z</code> in the full hurdle model above.</p>
@@ -420,13 +427,13 @@ theta_z          2.13310869 0.12449412  1.89234900  2.3782158</code></pre>
 <pre><code># A tibble: 2 × 5
   term        estimate std.error statistic  p.value
   &lt;chr&gt;          &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;    &lt;dbl&gt;
-1 (Intercept)   0.0325    0.0660     0.492 6.23e- 1
-2 x            -1.06      0.0906   -11.7   1.31e-31</code></pre>
+1 (Intercept)  -0.0156    0.0644    -0.243 8.08e- 1
+2 x            -0.928     0.0817   -11.3   7.64e-30</code></pre>
 </div>
 </div>
 <p>And here we see the effect of <code>x</code> on the realized outcome <code>y</code> in the simulated data (after excluding the abstentions). Again, the coefficient estimate in this model nicely replicates the <code>x</code> estimate from the full hurdle model above.</p>
 <p>Now that we’re confident the hurdle probit model is working as intended, we can fit it to the real-world UN data we prepared earlier. We’ll keep the part of the model predicting yes/no votes the same (i.e.&nbsp;using resolution issue and USSR vote variables as predictors). How should we predict whether the US votes or abstains from a particular resolution? Luckily for us, the <strong>unvotes</strong> data comes with a variable <code>importantvote</code>. Again, I’m no international relations expert but maybe if a resolution is deemed to be “important” the US will be more likely to weigh in—for or against.</p>
-<div class="cell" data-hash="index_cache/html/unnamed-chunk-16_02a395de94a43e4795557472d8b3cd9c">
+<div class="cell" data-hash="index_cache/html/unnamed-chunk-17_924a71f96ad7f2b4883e51284d6a5d36">
 <div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>fit_hurdle <span class="ot">&lt;-</span> <span class="fu">brm</span>(</span>
 <span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">bf</span>(vote <span class="sc">~</span> <span class="dv">0</span> <span class="sc">+</span> issue <span class="sc">+</span> ussr_vote, <span class="co"># yes/no model</span></span>
 <span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>     theta <span class="sc">~</span> importantvote),       <span class="co"># abstain/vote model</span></span>
@@ -442,14 +449,14 @@ theta_z          2.13310869 0.12449412  1.89234900  2.3782158</code></pre>
 <div class="cell-output cell-output-stdout">
 <pre><code>Running MCMC with 4 parallel chains...
 
-Chain 4 finished in 21.1 seconds.
-Chain 2 finished in 21.7 seconds.
-Chain 3 finished in 23.6 seconds.
-Chain 1 finished in 23.7 seconds.
+Chain 4 finished in 19.0 seconds.
+Chain 3 finished in 19.5 seconds.
+Chain 2 finished in 20.1 seconds.
+Chain 1 finished in 20.4 seconds.
 
 All 4 chains finished successfully.
-Mean chain execution time: 22.5 seconds.
-Total execution time: 23.8 seconds.</code></pre>
+Mean chain execution time: 19.7 seconds.
+Total execution time: 20.5 seconds.</code></pre>
 </div>
 </div>
 <p>Generating draws from the posterior predictive distribution from a custom family model in <strong>brms</strong> requires another user-defined function. <a href="https://cran.r-project.org/web/packages/brms/vignettes/brms_customfamilies.html">This vignette</a> helps us out with this once again.</p>
@@ -466,7 +473,7 @@ Total execution time: 23.8 seconds.</code></pre>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb24"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="fu">pp_check</span>(fit_hurdle, <span class="at">ndraws =</span> <span class="dv">100</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
-<p><img src="index_files/figure-html/unnamed-chunk-19-1.png" class="img-fluid" width="672"></p>
+<p><img src="index_files/figure-html/unnamed-chunk-20-1.png" class="img-fluid" width="672"></p>
 </div>
 </div>
 <p>We see that the model does an okay job recovering the 0’s (no), 1’s (yes), and 2’s (abstain) from the original data.</p>

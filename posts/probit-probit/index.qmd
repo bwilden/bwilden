@@ -6,6 +6,12 @@ categories: [Bayes, brms, Tutorial]
 max-description-length: 20
 ---
 
+```{css, echo=FALSE}
+.title {
+  color: #f5f5f5;
+}
+```
+
 ```{r}
 #| message: false
 #| warning: false
