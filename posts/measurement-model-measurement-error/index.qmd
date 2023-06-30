@@ -1,0 +1,25 @@
+---
+title: "Don't Mis-Measurement Measurement Model Measurement Error"
+author: "Bertrand Wilden"
+date: "2023-06-21"
+categories: [Bayes, Stan, Tutorial]
+max-description-length: 20
+draft: true
+---
+
+```{css, echo=FALSE}
+.title {
+  color: #f5f5f5;
+}
+```
+
+## Introduction
+
+- 4 dist plot
+  - sd, skew, kurtosis
+
+## Variance
+
+## Skew
+
+## Kurtosis
