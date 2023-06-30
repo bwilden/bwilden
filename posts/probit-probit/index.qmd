@@ -311,3 +311,8 @@ We see that the model does an okay job recovering the 0's (no), 1's (yes), and 2
 ## Concluding Thoughts
 
 If you're tackling a data problem involving binary outcomes and aiming to explicitly model abstentions, consider taking the trippy hurdle probit model for a spin. 
+
+```{r}
+sessionInfo()
+```
+
