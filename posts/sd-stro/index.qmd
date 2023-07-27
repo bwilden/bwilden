@@ -1,0 +1,137 @@
+---
+title: "SD - STRO"
+author: "Bertrand Wilden"
+date: "2023-06-21"
+categories: [GIS]
+max-description-length: 20
+draft: true
+---
+
+
+```{r}
+#| message: false
+#| warning: false
+
+# Packages and Global Options
+library(dplyr)
+library(ggplot2)
+library(here)
+library(purrr)
+library(tidycensus)
+library(sf)
+library(tigris)
+```
+
+
+
+```{r}
+stro <- readr::read_csv("https://seshat.datasd.org/stro_licenses/stro_licenses_datasd.csv")
+```
+
+```{r}
+sd_tracts <- tigris::tracts(state = "CA", county = "073")
+
+target_crs <- st_crs(sd_tracts)
+```
+
+```{r}
+stro_geo <- stro |> 
+  filter(!is.na(longitude)) |> 
+  st_as_sf(coords = c("longitude", "latitude"),
+           crs = target_crs,
+           remove = FALSE) |>
+  st_join(sd_tracts) |> 
+  group_by(GEOID) |> 
+  summarise(total_licenses = n()) |> 
+  st_drop_geometry()
+```
+
+
+```{r}
+#| include: false
+load_variables(year = 2021, dataset = "acs5") |> View()
+
+sd_area <- places(state = "CA") |> 
+  filter(NAME %in% c("San Diego", "Coronado", "National City", "Bonita", "Chula Vista"))
+```
+
+
+
+
+```{r}
+sd_acs <- get_acs(
+  geography = "tract",
+  variables = c("total_hhs" = "B25001_001E"),
+  state = "CA",
+  county = "San Diego",
+  geometry = TRUE
+) |> 
+  st_transform() |>
+  erase_water(year = 2021) |> 
+  st_make_valid() # Water makes the geometries wonky
+```
+
+
+```{r}
+sd <- sd_acs |> 
+  left_join(stro_geo, by = "GEOID") |> 
+  mutate(n = tidyr::replace_na(n, 0),
+         prop_stro = n / estimate,
+         log_prop_stro = log(prop_stro)) |> 
+  st_transform(crs = target_crs) 
+```
+
+
+```{r}
+st_crop_sd <- partial(
+  st_crop, 
+  xmin = -117.3, xmax = -116.99,
+  ymin = 33, ymax = 32.4
+)
+
+st_crop_central_sd <- partial(
+  st_crop, 
+  xmin = -117.3, xmax = -117,
+  ymin = 32.88, ymax = 32.67)
+```
+
+
+```{r}
+scale_fill_viridis_log_prop_stro <- partial(
+  scale_fill_viridis_c, 
+  labels = function(x) round(exp(x), 3),
+  breaks = log(c(0.005, 0.02, 0.1, .30)),
+  name = "Proportion",
+  option = "B",
+  # direction = -1,
+  na.value = "grey")
+```
+
+```{r}
+make_log_prop_stro_map <- function(input_data) {
+  n_zones <- nrow(input_data) 
+  
+  p <- ggplot(input_data) +
+    aes(fill = log_prop_stro) +
+    geom_sf(color = "black", lwd = 50 / nrow(input_data)) +
+    theme_void() +
+    scale_fill_viridis_log_prop_stro() +
+    labs(title = "Proportion of Short Term Rental Licenses\nby Total Households per Census Tract")
+  return(p)
+}
+```
+
+
+```{r}
+compose(make_log_prop_stro_map, st_crop_sd)(sd)
+
+# ggsave("/Users/bertrandwilden/Desktop/sd_stros_long.png")
+```
+
+```{r}
+compose(make_log_prop_stro_map, st_crop_central_sd)(sd)
+
+# ggsave("/Users/bertrandwilden/Desktop/sd_stros.png")
+```
+
+
