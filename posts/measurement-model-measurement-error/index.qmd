@@ -7,11 +7,23 @@ max-description-length: 20
 draft: true
 ---
 
+```{r}
+library(dplyr)
+library(tidyr)
+library(purrr)
+library(cmdstanr)
+register_knitr_engine()
+```
+
+
 ```{css, echo=FALSE}
 .title {
   color: #f5f5f5;
 }
 ```
+
+
+
 
 ## Introduction
 
@@ -19,6 +31,179 @@ draft: true
   - sd, skew, kurtosis
 
 ## Variance
+
+```{r}
+get_mle_dist_params <- function(input_df, unit_col, draws_col, distribution) {
+  stopifnot("distribution must be one of: N, T, SN, or ST" =
+              distribution %in% c("N", "T", "SN", "ST"))
+  stopifnot("draws vector must be numeric" =
+              isTRUE(is.numeric(input_df[[draws_col]])))
+  
+  if (distribution %in% c("N", "T")) {
+    alpha_0_list <- list(alpha = 0)
+    distribution <- paste0("S", distribution)
+  } else {
+    alpha_0_list <- list()
+  }
+  
+  out_df <- input_df |> 
+    select(all_of(c(unit_col, draws_col))) |> 
+    nest_by(!!sym(unit_col)) |> 
+    mutate(mod = list(sn::selm(!!sym(draws_col) ~ 1, 
+                               data = data,
+                               family = distribution,
+                               fixed.param = alpha_0_list)),
+           dp = sn::extractSECdistr(mod) |>
+             slot("dp") |>
+             t() |>
+             as_tibble()) |> 
+    unnest(dp) |> 
+    select(-c(data, mod))
+  return(out_df)
+}
+
+sim_noisy_data <- function(N, 
+                           n_draws, 
+                           noise_level, 
+                           true_b,
+                           bias_level = 0,
+                           dfs = Inf,
+                           ...) {
+  dat <- tibble(
+    unit = as.factor(1:N),
+    x_true = rnorm(N),
+    u = rnorm(N) * bias_level
+  ) |> 
+    crossing(draw = as.factor(1:n_draws)) |> 
+    group_by(unit) |> 
+    mutate(x_dist = sn::rst(n = n(), 
+                            xi = x_true, 
+                            omega = rexp(n(), rate = 1 / noise_level), 
+                            alpha = u,
+                            nu = dfs),
+           x_meas = mean(x_dist)) |> 
+    ungroup()
+  
+  unit_dps <- dat |> 
+    get_mle_dist_params(unit_col = "unit", 
+                        draws_col = "x_dist",
+                        ...)
+  
+  dat <- dat |> 
+    select(unit, x_true, x_meas, u) |> 
+    distinct() |> 
+    left_join(unit_dps, by = "unit") |> 
+    mutate(y = rnorm(n(), mean = x_true * true_b + u * bias_level))
+  
+  cor_true_meas <- cor(dat$x_true, dat$x_meas)
+  
+  return(lst(dat, cor_true_meas))
+}
+```
+
+
+```{r}
+normal_noise_sims <- map(
+  c(10),
+  sim_noisy_data,
+  N = 300,
+  n_draws = 1000,
+  true_b = 1,
+  distribution = "N"
+)
+```
+
+```{r}
+normal_noise_sims[[1]]$dat
+```
+
+
+```{cmdstan, output.var = "lm_w_measurement_error"}
+data {
+  int<lower=1> N;    
+  array[N] real x_meas; // observed xs
+  array[N] real x_sd;   // standard error estimate for each x
+  vector[N] y;
+}
+
+parameters {
+  real alpha;           
+  real beta;            
+  real<lower=0> sigma;
+  array[N] real x;       // true xs
+  real<lower=0> tau;     // scale hyperparameter for true x
+  real mu;               // location hyperparameter for true x
+}
+
+model {
+  alpha ~ normal(0, 2);
+  beta ~ normal(0, 2);
+  sigma ~ student_t(3, 0, 2);
+  tau ~ student_t(3, 0, 2);
+  mu ~ normal(0, 1);
+  to_vector(x) ~ normal(mu, tau);
+  
+  for (i in 1:N) {
+    x_meas[i] ~ normal(x[i], x_sd[i]);
+    y[i] ~ normal(alpha + beta * x[i], sigma);
+  }
+}
+```
+
+
+
+
+
+```{r}
+N=300
+true_b = 1
+noise_a = 2.5
+dat <- tibble(
+    x = rnorm(N)
+  ) |> 
+    mutate(x_sd = abs(noise_a + rnorm(n(), sd = .1)),
+           y = rnorm(n(), x * true_b),
+           x_meas = rnorm(n(), x, x_sd))
+  
+  stan_list <- list(
+    N = N,
+    x = dat$x,
+    x_meas = dat$x_meas,
+    x_sd = dat$x_sd,
+    y = dat$y,
+    skew = 0
+  )
+```
+
+```{r}
+fit <- lm_w_measurement_error$sample(
+  data = stan_list,
+  chains = 4,
+  refresh = 0,
+  parallel_chains = 4
+)
+```
+
+```{r}
+fit <- lm_w_measurement_error$sample(
+  data = list(
+    N = nrow(normal_noise_sims[[1]]$dat),
+    x_meas = normal_noise_sims[[1]]$dat$xi,
+    x_sd = normal_noise_sims[[1]]$dat$omega,
+    y = normal_noise_sims[[1]]$dat$y
+  ),
+  chains = 4,
+  parallel_chains = 4,
+  refresh = 0
+)
+```
+
+```{r}
+fit$summary()
+```
+
+
+
 
 ## Skew
 
