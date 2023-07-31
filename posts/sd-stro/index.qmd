@@ -7,11 +7,11 @@ max-description-length: 20
 draft: true
 ---
 
-A few days ago on the [r/SanDiegan subreddit](https://www.reddit.com/r/SanDiegan/comments/158psns/any_data_analysts_want_to_dig_into_stro_licenses/) someone posted a [link to new data](https://data.sandiego.gov/datasets/stro-licenses/) from the City of San Diego on Short-Term Residential Occupancy (STRO) licenses. These data show the addresses and owners of every licensed Airbnb (and other similar arrangements, I guess) in the city. Airbnb's are a soure of ire among some San Diego residents for supposedly wasting our precious housing supply. My view is that this issue is a bit of a red-herring. Housing in California cities like San Diego is so catastrophically under-supplied due to years of restrictive zoning laws that, even if Airbnbs were all made illegal tomorrow, it wouldn't make much of a difference.
+About a week ago on the [r/SanDiegan subreddit](https://www.reddit.com/r/SanDiegan/comments/158psns/any_data_analysts_want_to_dig_into_stro_licenses/) someone posted a [link to new data](https://data.sandiego.gov/datasets/stro-licenses/) from the City of San Diego on Short-Term Residential Occupancy (STRO) licenses. These data show the addresses and owners of every licensed Airbnb (and other similar arrangements, I guess) in the city. Airbnb's are a soure of ire among some San Diego residents for supposedly wasting our precious housing supply. My view is that this issue is a bit of a red-herring. Housing in California cities like San Diego is so catastrophically under-supplied due to years of restrictive zoning laws that, even if Airbnbs were all made illegal tomorrow, it wouldn't make much of a difference.
 
-In this post I'm going to walk through how to make some maps with this STRO data using R. I [posted one these maps to Reddit](https://www.reddit.com/r/SanDiegan/comments/15ahjyb/short_term_rental_licenses_map/) but made an embarrassing error which resulted in the incorrect magnitudes being displayed. Always double check your work!
+In this post I'm going to walk through how to make some maps with this STRO data using R. I [posted one these maps to Reddit](https://www.reddit.com/r/SanDiegan/comments/15ahjyb/short_term_rental_licenses_map/) but made an embarrassing error which resulted in the incorrect magnitudes being displayed. Always check your work before posting something online!
 
-## Working with the STRO data
+## Introducing the Data
 
 ```{r}
 #| message: false
@@ -26,7 +26,7 @@ library(sf)
 library(tigris)
 ```
 
-My goal is to create a choropleth map of San Diego with regions shaded according to their proportion of STROs. The packages {dplyr} and {ggplot2} are for some light data manipulation and producing the graphs. Inspired by [Michael DeCrescenzo's posts](https://mikedecr.netlify.app/blog/partial_fns_ggplot/) on functional programming in R, I use {purrr} for some currying and composition later in this post. {tidycensus} is the best way to access US Census data in my opinion. And {sf} and {tigris} are my two favorite GIS packages in R.
+Our goal is to create a choropleth map of San Diego with regions shaded according to their proportion of STROs. The packages {dplyr} and {ggplot2} are for some light data manipulation and producing the graphs. Inspired by [Michael DeCrescenzo's posts](https://mikedecr.netlify.app/blog/partial_fns_ggplot/) on functional programming in R, I use {purrr} for some currying and composition later in this post. The {tidycensus} package is the best way to access US Census data in my opinion. And {sf} and {tigris} are my two favorite GIS packages in R.
 
 Now let's take a look at the data.
 
@@ -36,9 +36,13 @@ stro <- readr::read_csv("https://seshat.datasd.org/stro_licenses/stro_licenses_d
 stro
 ```
 
-Looks like we've got around `r nrow(stro)` STRO licenses currently active in San Diego. But where are they concentrated? Luckily for our geo-spatial aspirations, the longitude and latitude values for these addresses are already contained in the data. Otherwise we would have to use a tool like the [Census geocoder](https://geocoding.geo.census.gov/geocoder/) or plug the addresses into ArcGIS. The longitude and latitude values will let us figure out in which Census tract these addresses are located, thereby allowing us to map their density.[^1]
+Looks like we've got around `r nrow(stro)` STRO licenses currently active in San Diego. But where are they concentrated? Luckily for our geo-spatial aspirations, the longitude and latitude values for these addresses are already contained in the data. If longitude and latitude weren't included we would have to use a tool like the [Census geocoder](https://geocoding.geo.census.gov/geocoder/) or plug the addresses into ArcGIS. These longitude and latitude values will let us figure out in which Census tract these addresses are located, thereby allowing us to map their density.[^1]
 
 [^1]: As someone mentioned in my Reddit post, there are alternative ways to map the density of geo-spatial data---such as plotting the points directly on the map. The way I'm doing it here runs the risk of running into the [Modifiable areal unit problem](https://en.wikipedia.org/wiki/Modifiable_areal_unit_problem)
+
+## Geo-spatial Merging
+
+The first step in linking addresses to tracts is loading in a shapefile containing the boundaries of the Census tracts in San Diego county. The {tigris} package conveniently has a `tracts()` function which gives us exactly what we need. We are also going to save the [coordinate-reference-system (CRS)](https://en.wikipedia.org/wiki/Spatial_reference_system) of this tracts object for later use. Dealing with CRS's is the source of a lot of GIS headaches. Without a common CRS, the various data sources we're assembling in this project won't be able to spatially match up with one another. The `target_crs` object will help us deal with this issue.
 
 ```{r}
 sd_tracts <- tracts(state = "CA", county = "San Diego",
@@ -47,25 +51,36 @@ sd_tracts <- tracts(state = "CA", county = "San Diego",
 target_crs <- st_crs(sd_tracts)
 ```
 
+Now we want to use `st_join()` to match the census tracts in `sd_tracts` with the addresses in our `stro` data frame. But first we need to convert the `stro` object into a shapefile using `st_as_sf()`. Note how we set `crs = target_crs` below to ensure that the shapefile version of `stro` is using the same CRS as our `tracts` data. The `st_as_sf()` function will error if any rows are missing coordinates, so we filter out the NA addresses first (these mostly seem to be duplicates in the original STRO data for some reason). Now we're all set to `st_join()` in the tracts data, thereby matching each STRO address with the Census tract in which it is located.
+
 ```{r}
 stro_geo <- stro |> 
   filter(!is.na(longitude)) |> 
   st_as_sf(coords = c("longitude", "latitude"),
            crs = target_crs,
            remove = FALSE) |>
-  st_join(sd_tracts) |> 
+  st_join(sd_tracts)
+```
+
+The variable for Census tract in the `stro_geo` shapefile/data frame is GEOID. This is an 11 digit value comprised of the two-digit state code ("06" for California), followed by the three-digit county code ("073" for San Diego county), followed by a six-digit tract code. We'll perform a simple group-by and summarise operation to calculate the total number of STRO licenses in each tract using this GEOID variable. The `st_drop_geometry()` function gets rid of the spatial boundaries for each tract in our data. We don't need those anymore because we'll be merging by GEOID from now on.
+
+```{r}
+stro_geo <- stro_geo |> 
   group_by(GEOID) |> 
   summarise(total_licenses = n()) |> 
   st_drop_geometry()
+stro_geo
 ```
 
 ```{r}
 #| include: false
-load_variables(year = 2021, dataset = "acs5") |> View()
-
 sd_area <- places(state = "CA") |> 
   filter(NAME %in% c("San Diego", "Coronado", "National City", "Bonita", "Chula Vista"))
 ```
+
+If we were to map out the total_licenses variable as it stands, we would probably end up with something that looks basically like a [population map](https://xkcd.com/1138/). Tracts with more total housing units will simply have more STRO permits to give out. Instead, we need to divide the total licenses in each tract by the total housing units, thereby giving us the proportion of housing devoted to STRO licenses. We can get the total housing units, by tract, using the `get_acs()` function in the {tidycensus} package. In order to grab Census data in this way, you will have to sign up for a Census API key ([see here](https://walker-data.com/tidycensus/articles/basic-usage.html) for more information). The variable for housing units in the American Community Survey (ACS) is "B25001_001E", which we can rename "total_housing_units" within the API call.[^2] 
+
+[^2]: In the version of the final map I posted to Reddit, I accidentally used the ACS variable for *total households*. This corresponds to sets of people living in each Census tract, rather than physical housing units. Total physical housing units will generally be more than total households because many units will be vacant at any given time. The two variables, however, appear to be roughly proportional to one another. So the map I originally posted was incorrect in terms of magnitude but shows a similar pattern of STRO density as the corrected map.
 
 ```{r}
 sd_acs <- get_acs(
@@ -74,21 +89,95 @@ sd_acs <- get_acs(
   state = "CA",
   county = "San Diego",
   geometry = TRUE,
+  output = "wide",
   progress_bar = FALSE
-) |> 
+)
+```
+
+We're also going to include `geometry = TRUE` in our API call so we get the tract boundaries for plotting later. Unfortunately, these geometries are quite coarse and "blocky". If we want to see all of the nice intricate geographic details in San Diego's Mission Bay, for example, we'll need to use the `erase_water()` function from {tigris}. For some reason `erase_water()` messes up the Census shapefile geometries but we can fix that with {sf}'s `st_make_valid()`.
+
+```{r}
+sd_acs <- sd_acs |> 
   st_transform() |>
   erase_water(year = 2021) |> 
   st_make_valid() # Water makes the geometries wonky
 ```
 
+The last step before making some cool maps is to join our ACS data to the geocoded STRO data. The argument `geography = "tract"` in `get_acs()` above ensures that the GEOIDs in that data will match up with the tract GEOIDs in our STRO data. If we left-join the STRO data into the ACS data we will keep all tracts in San Diego in the resulting data frame. Tracts without any STRO licenses will have NA values for the total_licenses variable, which we can turn into 0's with `tidyr::replace_na()`. 
+
 ```{r}
 sd <- sd_acs |> 
   left_join(stro_geo, by = "GEOID") |> 
   mutate(total_licenses = tidyr::replace_na(total_licenses, 0),
-         prop_stro = total_licenses / estimate,
-         log_prop_stro = log(prop_stro)) |> 
-  st_transform(crs = target_crs) 
+         prop_stro = total_licenses / total_housing_units,
+         log_prop_stro = log(prop_stro))
 ```
+
+Then we can calculate tract-level STRO proportions by dividing the total_licenses by the total_housing_units. We also want to generate a variable for the log of this proportion. As @fig-dist-stros shows, STRO licenses are heavily skewed towards certain neighborhoods. Up to `r round(max(sd$prop_stro, na.rm = TRUE), 3) * 100`% of housing units in some beach areas of San Diego are devoted to STROs, whereas I'm not sure why anyone would want to rent an Airbnb in Kearny Mesa. Taking the natural log of our STRO proportion variable will help show distinctions much more clearly when it comes to making the choropleth map.
+
+```{r}
+#| warning: false
+#| message: false
+#| echo: false
+#| label: fig-dist-stros
+#| fig-cap: "STRO Proportion Tract Histogram"
+sd |> 
+  ggplot(aes(x = prop_stro)) +
+  geom_histogram() +
+  labs(x = "Proportion STRO", y = "Count") +
+  theme_bw()
+```
+
+## Mapping Functions
+
+It's almost time to make some maps! We will be making several versions using the same basic template, so this calls for writing our own function. The custom function `make_log_prop_stro_map()` below takes a data frame as input (our `sd` object in this case) and outputs a beautiful choropleth map with Census tracts shaded according to their STRO proportion. Most of the heavy lifting in this function is done by `geom_sf()`. This function recognizes the spatial geometries in our data and draws the borders for each tract. The argument `lwd` controls the thickness of these borders. I tried playing around with this option so that the border thickness is a function of the number of tracts in the input data. The more tracts, the thinner the border should be so that things don't get too crowded. This will be relevant in a minute when we zoom in on different areas of San Diego.
+
+
+
+```{r}
+make_log_prop_stro_map <- function(input_data) {
+  p <- ggplot(input_data) +
+    aes(fill = log_prop_stro) +
+    geom_sf(color = "black", lwd = 50 / nrow(input_data)) +
+    theme_void() +
+    scale_fill_viridis_log_prop_stro() +
+    labs(title = "Proportion of Short Term Rental Licenses\nby Total Households per Census Tract")
+  return(p)
+}
+
+scale_fill_viridis_log_prop_stro <- partial(
+  scale_fill_viridis_c, 
+  labels = function(x) round(exp(x), 3),
+  breaks = log(c(0.005, 0.02, 0.1, .30)),
+  name = "Proportion",
+  option = "B",
+  na.value = "grey")
+```
+
+You might be wondering what's going on with `scale_fill_viridis_log_prop_stro()`. This is another function we are writing in order to control the color palette and legend in our map. The `partial()` function from the {purrr} package takes a function and returns a new function which is a copy of the original function with new default arguments. In this case, we're taking {ggplot2}'s `scale_fill_viridis_c()` and adding some options which suit the type of map made by `make_log_prop_stro_map()`. One of the key arguments is `labels = function(x) round(exp(x), 3)`. By exponentiating our logged proportion STRO variable, we ensure that the legend labels on our map will be in the original, non-logged units. Using "partial" functions opens up a lot of possibilities in your coding. We could now use `scale_fill_viridis_log_prop_stro()` in other similar plots without copying and pasting a bunch of specific `scale_fill_viridis_c()` arguments if we wanted to. Read [about this here](https://mikedecr.netlify.app/blog/partial_fns_ggplot/) if you're interested in learning more about partial, or curried functions.
+
+## The Maps
+
+Okay now it is FINALLY time to make some maps!
+
+```{r}
+#| label: fig-sd-county
+#| fig-cap: "San Diego County"
+make_log_prop_stro_map(sd)
+```
+
+Wow, San Diego county is really big and we only have data for a small part of it. All those grey shaded regions either have zero STROs or they are not included in the San Diego city data set we started with. Perhaps if we squint really hard we can make out some geographic patterns. 
+
+Wouldn't it be nice if we could zoom in a bit? I experimented with a lot of different methods for accomplishing this, such as restricting the Census data to tracts in the [*place* of San Diego city](https://en.wikipedia.org/wiki/Census-designated_place), but the easiest method I found involved using `st_crop()` to filter out data which lies outside a box defined by four longitude and latitude points. To find the desired longitude and latitude points, you can use something like Google maps or you can make the map using `theme_bw()` as shown in @fig-sd-county-bw and go from there.
+
+```{r}
+#| label: fig-sd-county-bw
+#| fig-cap: "San Diego County"
+make_log_prop_stro_map(sd) +
+  theme_bw()
+```
+
+In keeping with our functional programming style, we'll write some curried functions to accomplish the cropping. The functions `st_crop_sd()` and `st_crop_central_sd()` use my painstakingly chosen longitude and latitude values as defaults in the `st_crop()` function. 
 
 ```{r}
 st_crop_sd <- partial(
@@ -103,44 +192,32 @@ st_crop_central_sd <- partial(
   ymin = 32.88, ymax = 32.67)
 ```
 
-```{r}
-scale_fill_viridis_log_prop_stro <- partial(
-  scale_fill_viridis_c, 
-  labels = function(x) round(exp(x), 3),
-  breaks = log(c(0.005, 0.02, 0.1, .30)),
-  name = "Proportion",
-  option = "B",
-  # direction = -1,
-  na.value = "grey")
-```
+There are a few ways we could use our new crop functions. We could take the `sd` data frame, pipe it into `st_crop_sd()` then pipe that into `make_log_prop_stro_map()`. But instead we are going to try to fully embrace a functional programming style approach by using function *composition* to make our final maps. The `compose()` function from {purrr} allows us to combine two functions together, evaluating one and then the other. The code below applies the `st_crop_sd` function to the `sd` object and then applies `make_log_prop_stro_map()` to the cropped data frame.[^3] The result is @fig-sd-city. Nice, we successfully filtered out all those Census tracts in San Diego county with no data, thereby showing the STRO density much more clearly!
+
+[^3]: Again, Michael DeCrescenzo has a nice post on function compostion here: [https://mikedecr.netlify.app/blog/composition/](https://mikedecr.netlify.app/blog/composition/)
 
 ```{r}
-make_log_prop_stro_map <- function(input_data) {
-  n_zones <- nrow(input_data) 
-  
-  p <- ggplot(input_data) +
-    aes(fill = log_prop_stro) +
-    geom_sf(color = "black", lwd = 50 / nrow(input_data)) +
-    theme_void() +
-    scale_fill_viridis_log_prop_stro() +
-    labs(title = "Proportion of Short Term Rental Licenses\nby Total Households per Census Tract")
-  return(p)
-}
-```
-
-```{r}
+#| warning: false
+#| label: fig-sd-city
+#| fig-cap: "San Diego County"
 compose(make_log_prop_stro_map, st_crop_sd)(sd)
-
-# ggsave("/Users/bertrandwilden/Desktop/sd_stros_long.png")
 ```
 
+We can zoom in even further with `st_crop_central_sd()` in @fig-sd-central. Looks like there are a ton of Airbnbs in Mission Bay and parts of Pacific Beach. Obviously these are desirable vacation spots in San Diego, but these neighborhoods are also comprised mostly of 1-2 story apartments/houses. If we legalized denser housing here maybe more people could live within walking distance of the beach. Wouldn't that be nice!
+
 ```{r}
+#| warning: false
+#| label: fig-sd-central
+#| fig-cap: "San Diego County"
 compose(make_log_prop_stro_map, st_crop_central_sd)(sd)
-
-# ggsave("/Users/bertrandwilden/Desktop/sd_stros.png")
 ```
 
+And that's how you can make nice-looking choropleth maps in R using geocoded data.
+
+So is Airbnb the big villain some make it out to be? Using the Census API call below we see that San Diego City has 545,792 total housing units. The STRO data contain around `r nrow(stro)` licenses, which comes out to `r round(nrow(stro) / 545792, 3) * 100`% of the total housing stock. It's going to take a lot more supply than that to make housing affordable in San Diego. Instead of focusing on Airbnbs, maybe we should work towards supporting things that could really make a difference like [SB-10](https://www.sandiegouniontribune.com/news/politics/story/2023-05-17/san-diego-mayor-proposes-sweeping-package-of-housing-incentives-and-regulation-changes).
+
 ```{r}
+#| message: false
 get_acs(
   geography = "place",
   variables = c("total_housing_units" = "B25001_001E"),

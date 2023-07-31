@@ -176,7 +176,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <h2 id="toc-title">Contents</h2>
    
   <ul>
-  <li><a href="#working-with-the-stro-data" id="toc-working-with-the-stro-data" class="nav-link active" data-scroll-target="#working-with-the-stro-data">Working with the STRO data</a></li>
+  <li><a href="#introducing-the-data" id="toc-introducing-the-data" class="nav-link active" data-scroll-target="#introducing-the-data">Introducing the Data</a></li>
+  <li><a href="#geo-spatial-merging" id="toc-geo-spatial-merging" class="nav-link" data-scroll-target="#geo-spatial-merging">Geo-spatial Merging</a></li>
+  <li><a href="#mapping-functions" id="toc-mapping-functions" class="nav-link" data-scroll-target="#mapping-functions">Mapping Functions</a></li>
+  <li><a href="#the-maps" id="toc-the-maps" class="nav-link" data-scroll-target="#the-maps">The Maps</a></li>
   </ul>
 </nav>
 </nav>
@@ -190,12 +193,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 
 
-<p>A few days ago on the <a href="https://www.reddit.com/r/SanDiegan/comments/158psns/any_data_analysts_want_to_dig_into_stro_licenses/">r/SanDiegan subreddit</a> someone posted a <a href="https://data.sandiego.gov/datasets/stro-licenses/">link to new data</a> from the City of San Diego on Short-Term Residential Occupancy (STRO) licenses. These data show the addresses and owners of every licensed Airbnb (and other similar arrangements, I guess) in the city. Airbnb’s are a soure of ire among some San Diego residents for supposedly wasting our precious housing supply. My view is that this issue is a bit of a red-herring. Housing in California cities like San Diego is so catastrophically under-supplied due to years of restrictive zoning laws that, even if Airbnbs were all made illegal tomorrow, it wouldn’t make much of a difference.</p>
-<p>In this post I’m going to walk through how to make some maps with this STRO data using R. I <a href="https://www.reddit.com/r/SanDiegan/comments/15ahjyb/short_term_rental_licenses_map/">posted one these maps to Reddit</a> but made an embarrassing error which resulted in the incorrect magnitudes being displayed. Always double check your work!</p>
-<section id="working-with-the-stro-data" class="level2">
-<h2 class="anchored" data-anchor-id="working-with-the-stro-data">Working with the STRO data</h2>
+<p>About a week ago on the <a href="https://www.reddit.com/r/SanDiegan/comments/158psns/any_data_analysts_want_to_dig_into_stro_licenses/">r/SanDiegan subreddit</a> someone posted a <a href="https://data.sandiego.gov/datasets/stro-licenses/">link to new data</a> from the City of San Diego on Short-Term Residential Occupancy (STRO) licenses. These data show the addresses and owners of every licensed Airbnb (and other similar arrangements, I guess) in the city. Airbnb’s are a soure of ire among some San Diego residents for supposedly wasting our precious housing supply. My view is that this issue is a bit of a red-herring. Housing in California cities like San Diego is so catastrophically under-supplied due to years of restrictive zoning laws that, even if Airbnbs were all made illegal tomorrow, it wouldn’t make much of a difference.</p>
+<p>In this post I’m going to walk through how to make some maps with this STRO data using R. I <a href="https://www.reddit.com/r/SanDiegan/comments/15ahjyb/short_term_rental_licenses_map/">posted one these maps to Reddit</a> but made an embarrassing error which resulted in the incorrect magnitudes being displayed. Always check your work before posting something online!</p>
+<section id="introducing-the-data" class="level2">
+<h2 class="anchored" data-anchor-id="introducing-the-data">Introducing the Data</h2>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Packages and Global Options</span></span>
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Packages</span></span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(dplyr)</span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(ggplot2)</span>
 <span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(purrr)</span>
@@ -203,26 +206,26 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(sf)</span>
 <span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tigris)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<p>My goal is to create a choropleth map of San Diego with regions shaded according to their proportion of STROs. The packages {dplyr} and {ggplot2} are for some light data manipulation and producing the graphs. Inspired by <a href="https://mikedecr.netlify.app/blog/partial_fns_ggplot/">Michael DeCrescenzo’s posts</a> on functional programming in R, I use {purrr} for some currying and composition later in this post. {tidycensus} is the best way to access US Census data in my opinion. And {sf} and {tigris} are my two favorite GIS packages in R.</p>
+<p>Our goal is to create a choropleth map of San Diego with regions shaded according to their proportion of STROs. The packages {dplyr} and {ggplot2} are for some light data manipulation and producing the graphs. Inspired by <a href="https://mikedecr.netlify.app/blog/partial_fns_ggplot/">Michael DeCrescenzo’s posts</a> on functional programming in R, I use {purrr} for some currying and composition later in this post. The {tidycensus} package is the best way to access US Census data in my opinion. And {sf} and {tigris} are my two favorite GIS packages in R.</p>
 <p>Now let’s take a look at the data.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>stro <span class="ot">&lt;-</span> readr<span class="sc">::</span><span class="fu">read_csv</span>(<span class="st">"https://seshat.datasd.org/stro_licenses/stro_licenses_datasd.csv"</span>)</span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>stro</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
-<pre><code># A tibble: 7,816 × 23
+<pre><code># A tibble: 7,828 × 23
    license_id address      street_number street_number_fraction street_direction
    &lt;chr&gt;      &lt;chr&gt;                &lt;dbl&gt; &lt;chr&gt;                  &lt;chr&gt;           
- 1 STR-00001L 3119 Keats …          3119 &lt;NA&gt;                   &lt;NA&gt;            
- 2 STR-00008L 2026 BALBOA…          2026 &lt;NA&gt;                   &lt;NA&gt;            
- 3 STR-00012L 4922 Lamont…          4922 &lt;NA&gt;                   &lt;NA&gt;            
- 4 STR-00014L 412 Los Ala…           412 &lt;NA&gt;                   &lt;NA&gt;            
- 5 STR-00017L 3353 Fox Pl…          3353 &lt;NA&gt;                   &lt;NA&gt;            
- 6 STR-00026L 2525 E St, …          2525 &lt;NA&gt;                   &lt;NA&gt;            
- 7 STR-00035L 3670 KEATIN…          3670 &lt;NA&gt;                   &lt;NA&gt;            
- 8 STR-00037L 6300 Scimit…          6300 &lt;NA&gt;                   &lt;NA&gt;            
- 9 STR-00046L 4039 Lamont…          4039 &lt;NA&gt;                   &lt;NA&gt;            
-10 STR-00049L 4445 Narrag…          4445 &lt;NA&gt;                   &lt;NA&gt;            
-# ℹ 7,806 more rows
+ 1 STR-01939L 1633 LAW St…          1633 &lt;NA&gt;                   &lt;NA&gt;            
+ 2 STR-02856L 2315 AVENID…          2315 &lt;NA&gt;                   &lt;NA&gt;            
+ 3 STR-03110L 13680 VIA C…         13680 &lt;NA&gt;                   &lt;NA&gt;            
+ 4 STR-01470L 4291 Corte …          4291 &lt;NA&gt;                   &lt;NA&gt;            
+ 5 STR-02940L 1016 W BRIA…          1016 &lt;NA&gt;                   W               
+ 6 STR-00057L 4767 OCEAN …          4767 &lt;NA&gt;                   &lt;NA&gt;            
+ 7 STR-02180L 2138 REED A…          2138 &lt;NA&gt;                   &lt;NA&gt;            
+ 8 STR-03888L 4212 Florid…          4212 &lt;NA&gt;                   &lt;NA&gt;            
+ 9 STR-00513L 3745 33rd S…          3745 &lt;NA&gt;                   &lt;NA&gt;            
+10 STR-02250L 3820 Vermon…          3820 &lt;NA&gt;                   &lt;NA&gt;            
+# ℹ 7,818 more rows
 # ℹ 18 more variables: street_name &lt;chr&gt;, street_type &lt;chr&gt;, unit_type &lt;chr&gt;,
 #   unit_number &lt;chr&gt;, city &lt;chr&gt;, state &lt;chr&gt;, zip &lt;dbl&gt;, tier &lt;chr&gt;,
 #   community_planning_area &lt;chr&gt;, date_expiration &lt;date&gt;, rtax_no &lt;chr&gt;,
@@ -231,7 +234,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 #   host_contact_name &lt;chr&gt;, council_district &lt;dbl&gt;</code></pre>
 </div>
 </div>
-<p>Looks like we’ve got around 7816 STRO licenses currently active in San Diego. But where are they concentrated? Luckily for our geo-spatial aspirations, the longitude and latitude values for these addresses are already contained in the data. Otherwise we would have to use a tool like the <a href="https://geocoding.geo.census.gov/geocoder/">Census geocoder</a> or plug the addresses into ArcGIS. The longitude and latitude values will let us figure out in which Census tract these addresses are located, thereby allowing us to map their density.<a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a></p>
+<p>Looks like we’ve got around 7828 STRO licenses currently active in San Diego. But where are they concentrated? Luckily for our geo-spatial aspirations, the longitude and latitude values for these addresses are already contained in the data. If longitude and latitude weren’t included we would have to use a tool like the <a href="https://geocoding.geo.census.gov/geocoder/">Census geocoder</a> or plug the addresses into ArcGIS. These longitude and latitude values will let us figure out in which Census tract these addresses are located, thereby allowing us to map their density.<a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a></p>
+</section>
+<section id="geo-spatial-merging" class="level2">
+<h2 class="anchored" data-anchor-id="geo-spatial-merging">Geo-spatial Merging</h2>
+<p>The first step in linking addresses to tracts is loading in a shapefile containing the boundaries of the Census tracts in San Diego county. The {tigris} package conveniently has a <code>tracts()</code> function which gives us exactly what we need. We are also going to save the <a href="https://en.wikipedia.org/wiki/Spatial_reference_system">coordinate-reference-system (CRS)</a> of this tracts object for later use. Dealing with CRS’s is the source of a lot of GIS headaches. Without a common CRS, the various data sources we’re assembling in this project won’t be able to spatially match up with one another. The <code>target_crs</code> object will help us deal with this issue.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>sd_tracts <span class="ot">&lt;-</span> <span class="fu">tracts</span>(<span class="at">state =</span> <span class="st">"CA"</span>, <span class="at">county =</span> <span class="st">"San Diego"</span>,</span>
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>                    <span class="at">progress_bar =</span> <span class="cn">FALSE</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
@@ -240,35 +247,63 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 <div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>target_crs <span class="ot">&lt;-</span> <span class="fu">st_crs</span>(sd_tracts)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
+<p>Now we want to use <code>st_join()</code> to match the census tracts in <code>sd_tracts</code> with the addresses in our <code>stro</code> data frame. But first we need to convert the <code>stro</code> object into a shapefile using <code>st_as_sf()</code>. Note how we set <code>crs = target_crs</code> below to ensure that the shapefile version of <code>stro</code> is using the same CRS as our <code>tracts</code> data. The <code>st_as_sf()</code> function will error if any rows are missing coordinates, so we filter out the NA addresses first (these mostly seem to be duplicates in the original STRO data for some reason). Now we’re all set to <code>st_join()</code> in the tracts data, thereby matching each STRO address with the Census tract in which it is located.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>stro_geo <span class="ot">&lt;-</span> stro <span class="sc">|&gt;</span> </span>
 <span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="sc">!</span><span class="fu">is.na</span>(longitude)) <span class="sc">|&gt;</span> </span>
 <span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">st_as_sf</span>(<span class="at">coords =</span> <span class="fu">c</span>(<span class="st">"longitude"</span>, <span class="st">"latitude"</span>),</span>
 <span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>           <span class="at">crs =</span> target_crs,</span>
 <span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>           <span class="at">remove =</span> <span class="cn">FALSE</span>) <span class="sc">|&gt;</span></span>
-<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">st_join</span>(sd_tracts) <span class="sc">|&gt;</span> </span>
-<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(GEOID) <span class="sc">|&gt;</span> </span>
-<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="at">total_licenses =</span> <span class="fu">n</span>()) <span class="sc">|&gt;</span> </span>
-<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">st_drop_geometry</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">st_join</span>(sd_tracts)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
+<p>The variable for Census tract in the <code>stro_geo</code> shapefile/data frame is GEOID. This is an 11 digit value comprised of the two-digit state code (“06” for California), followed by the three-digit county code (“073” for San Diego county), followed by a six-digit tract code. We’ll perform a simple group-by and summarise operation to calculate the total number of STRO licenses in each tract using this GEOID variable. The <code>st_drop_geometry()</code> function gets rid of the spatial boundaries for each tract in our data. We don’t need those anymore because we’ll be merging by GEOID from now on.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>sd_acs <span class="ot">&lt;-</span> <span class="fu">get_acs</span>(</span>
-<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">geography =</span> <span class="st">"tract"</span>,</span>
-<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">variables =</span> <span class="fu">c</span>(<span class="st">"total_housing_units"</span> <span class="ot">=</span> <span class="st">"B25001_001E"</span>),</span>
-<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">state =</span> <span class="st">"CA"</span>,</span>
-<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">county =</span> <span class="st">"San Diego"</span>,</span>
-<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">geometry =</span> <span class="cn">TRUE</span>,</span>
-<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">progress_bar =</span> <span class="cn">FALSE</span></span>
-<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>) <span class="sc">|&gt;</span> </span>
-<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">st_transform</span>() <span class="sc">|&gt;</span></span>
-<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">erase_water</span>(<span class="at">year =</span> <span class="dv">2021</span>) <span class="sc">|&gt;</span> </span>
-<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">st_make_valid</span>() <span class="co"># Water makes the geometries wonky</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>stro_geo <span class="ot">&lt;-</span> stro_geo <span class="sc">|&gt;</span> </span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(GEOID) <span class="sc">|&gt;</span> </span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="at">total_licenses =</span> <span class="fu">n</span>()) <span class="sc">|&gt;</span> </span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">st_drop_geometry</span>()</span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>stro_geo</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 301 × 2
+   GEOID       total_licenses
+ * &lt;chr&gt;                &lt;int&gt;
+ 1 06073000100             22
+ 2 06073000201             23
+ 3 06073000202             74
+ 4 06073000301             37
+ 5 06073000302             18
+ 6 06073000400             26
+ 7 06073000500             49
+ 8 06073000600             40
+ 9 06073000700             61
+10 06073000800             55
+# ℹ 291 more rows</code></pre>
+</div>
+</div>
+<p>If we were to map out the total_licenses variable as it stands, we would probably end up with something that looks basically like a <a href="https://xkcd.com/1138/">population map</a>. Tracts with more total housing units will simply have more STRO permits to give out. Instead, we need to divide the total licenses in each tract by the total housing units, thereby giving us the proportion of housing devoted to STRO licenses. We can get the total housing units, by tract, using the <code>get_acs()</code> function in the {tidycensus} package. In order to grab Census data in this way, you will have to sign up for a Census API key (<a href="https://walker-data.com/tidycensus/articles/basic-usage.html">see here</a> for more information). The variable for housing units in the American Community Survey (ACS) is “B25001_001E”, which we can rename “total_housing_units” within the API call.<a href="#fn2" class="footnote-ref" id="fnref2" role="doc-noteref"><sup>2</sup></a></p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>sd_acs <span class="ot">&lt;-</span> <span class="fu">get_acs</span>(</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">geography =</span> <span class="st">"tract"</span>,</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">variables =</span> <span class="fu">c</span>(<span class="st">"total_housing_units"</span> <span class="ot">=</span> <span class="st">"B25001_001E"</span>),</span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">state =</span> <span class="st">"CA"</span>,</span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">county =</span> <span class="st">"San Diego"</span>,</span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">geometry =</span> <span class="cn">TRUE</span>,</span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">output =</span> <span class="st">"wide"</span>,</span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">progress_bar =</span> <span class="cn">FALSE</span></span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stderr">
 <pre><code>Getting data from the 2017-2021 5-year ACS</code></pre>
 </div>
 <div class="cell-output cell-output-stderr">
 <pre><code>Downloading feature geometry from the Census website.  To cache shapefiles for use in future sessions, set `options(tigris_use_cache = TRUE)`.</code></pre>
 </div>
+</div>
+<p>We’re also going to include <code>geometry = TRUE</code> in our API call so we get the tract boundaries for plotting later. Unfortunately, these geometries are quite coarse and “blocky”. If we want to see all of the nice intricate geographic details in San Diego’s Mission Bay, for example, we’ll need to use the <code>erase_water()</code> function from {tigris}. For some reason <code>erase_water()</code> messes up the Census shapefile geometries but we can fix that with {sf}’s <code>st_make_valid()</code>.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>sd_acs <span class="ot">&lt;-</span> sd_acs <span class="sc">|&gt;</span> </span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">st_transform</span>() <span class="sc">|&gt;</span></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">erase_water</span>(<span class="at">year =</span> <span class="dv">2021</span>) <span class="sc">|&gt;</span> </span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">st_make_valid</span>() <span class="co"># Water makes the geometries wonky</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stderr">
 <pre><code>Fetching area water data for your dataset's location...</code></pre>
 </div>
@@ -277,71 +312,117 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 If this is slow, try a larger area threshold value.</code></pre>
 </div>
 </div>
+<p>The last step before making some cool maps is to join our ACS data to the geocoded STRO data. The argument <code>geography = "tract"</code> in <code>get_acs()</code> above ensures that the GEOIDs in that data will match up with the tract GEOIDs in our STRO data. If we left-join the STRO data into the ACS data we will keep all tracts in San Diego in the resulting data frame. Tracts without any STRO licenses will have NA values for the total_licenses variable, which we can turn into 0’s with <code>tidyr::replace_na()</code>.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>sd <span class="ot">&lt;-</span> sd_acs <span class="sc">|&gt;</span> </span>
-<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">left_join</span>(stro_geo, <span class="at">by =</span> <span class="st">"GEOID"</span>) <span class="sc">|&gt;</span> </span>
-<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">total_licenses =</span> tidyr<span class="sc">::</span><span class="fu">replace_na</span>(total_licenses, <span class="dv">0</span>),</span>
-<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>         <span class="at">prop_stro =</span> total_licenses <span class="sc">/</span> estimate,</span>
-<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>         <span class="at">log_prop_stro =</span> <span class="fu">log</span>(prop_stro)) <span class="sc">|&gt;</span> </span>
-<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">st_transform</span>(<span class="at">crs =</span> target_crs) </span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>sd <span class="ot">&lt;-</span> sd_acs <span class="sc">|&gt;</span> </span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">left_join</span>(stro_geo, <span class="at">by =</span> <span class="st">"GEOID"</span>) <span class="sc">|&gt;</span> </span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">total_licenses =</span> tidyr<span class="sc">::</span><span class="fu">replace_na</span>(total_licenses, <span class="dv">0</span>),</span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>         <span class="at">prop_stro =</span> total_licenses <span class="sc">/</span> total_housing_units,</span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a>         <span class="at">log_prop_stro =</span> <span class="fu">log</span>(prop_stro))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
+<p>Then we can calculate tract-level STRO proportions by dividing the total_licenses by the total_housing_units. We also want to generate a variable for the log of this proportion. As <a href="#fig-dist-stros">Figure&nbsp;1</a> shows, STRO licenses are heavily skewed towards certain neighborhoods. Up to 38.7% of housing units in some beach areas of San Diego are devoted to STROs, whereas I’m not sure why anyone would want to rent an Airbnb in Kearny Mesa. Taking the natural log of our STRO proportion variable will help show distinctions much more clearly when it comes to making the choropleth map.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>st_crop_sd <span class="ot">&lt;-</span> <span class="fu">partial</span>(</span>
-<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>  st_crop, </span>
-<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">xmin =</span> <span class="sc">-</span><span class="fl">117.3</span>, <span class="at">xmax =</span> <span class="sc">-</span><span class="fl">116.99</span>,</span>
-<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">ymin =</span> <span class="dv">33</span>, <span class="at">ymax =</span> <span class="fl">32.4</span></span>
-<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a>st_crop_central_sd <span class="ot">&lt;-</span> <span class="fu">partial</span>(</span>
-<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a>  st_crop, </span>
-<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">xmin =</span> <span class="sc">-</span><span class="fl">117.3</span>, <span class="at">xmax =</span> <span class="sc">-</span><span class="dv">117</span>,</span>
-<span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a>  <span class="at">ymin =</span> <span class="fl">32.88</span>, <span class="at">ymax =</span> <span class="fl">32.67</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>scale_fill_viridis_log_prop_stro <span class="ot">&lt;-</span> <span class="fu">partial</span>(</span>
-<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>  scale_fill_viridis_c, </span>
-<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">labels =</span> <span class="cf">function</span>(x) <span class="fu">round</span>(<span class="fu">exp</span>(x), <span class="dv">3</span>),</span>
-<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">breaks =</span> <span class="fu">log</span>(<span class="fu">c</span>(<span class="fl">0.005</span>, <span class="fl">0.02</span>, <span class="fl">0.1</span>, .<span class="dv">30</span>)),</span>
-<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">name =</span> <span class="st">"Proportion"</span>,</span>
-<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">option =</span> <span class="st">"B"</span>,</span>
-<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a>  <span class="co"># direction = -1,</span></span>
-<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">na.value =</span> <span class="st">"grey"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>make_log_prop_stro_map <span class="ot">&lt;-</span> <span class="cf">function</span>(input_data) {</span>
-<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>  n_zones <span class="ot">&lt;-</span> <span class="fu">nrow</span>(input_data) </span>
-<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>  </span>
-<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>  p <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(input_data) <span class="sc">+</span></span>
-<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">aes</span>(<span class="at">fill =</span> log_prop_stro) <span class="sc">+</span></span>
-<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_sf</span>(<span class="at">color =</span> <span class="st">"black"</span>, <span class="at">lwd =</span> <span class="dv">50</span> <span class="sc">/</span> <span class="fu">nrow</span>(input_data)) <span class="sc">+</span></span>
-<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a>    <span class="fu">theme_void</span>() <span class="sc">+</span></span>
-<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a>    <span class="fu">scale_fill_viridis_log_prop_stro</span>() <span class="sc">+</span></span>
-<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a>    <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"Proportion of Short Term Rental Licenses</span><span class="sc">\n</span><span class="st">by Total Households per Census Tract"</span>)</span>
-<span id="cb16-10"><a href="#cb16-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">return</span>(p)</span>
-<span id="cb16-11"><a href="#cb16-11" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="fu">compose</span>(make_log_prop_stro_map, st_crop_sd)(sd)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stderr">
-<pre><code>Warning: attribute variables are assumed to be spatially constant throughout
-all geometries</code></pre>
-</div>
 <div class="cell-output-display">
-<p><img src="index_files/figure-html/unnamed-chunk-11-1.png" class="img-fluid" width="672"></p>
+<div id="fig-dist-stros" class="quarto-figure quarto-figure-center anchored">
+<figure class="figure">
+<p><img src="index_files/figure-html/fig-dist-stros-1.png" class="img-fluid figure-img" width="672"></p>
+<figcaption class="figure-caption">Figure&nbsp;1: STRO Proportion Tract Histogram</figcaption>
+</figure>
 </div>
-<div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="co"># ggsave("/Users/bertrandwilden/Desktop/sd_stros_long.png")</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
+</div>
+</section>
+<section id="mapping-functions" class="level2">
+<h2 class="anchored" data-anchor-id="mapping-functions">Mapping Functions</h2>
+<p>It’s almost time to make some maps! We will be making several versions using the same basic template, so this calls for writing our own function. The custom function <code>make_log_prop_stro_map()</code> below takes a data frame as input (our <code>sd</code> object in this case) and outputs a beautiful choropleth map with Census tracts shaded according to their STRO proportion. Most of the heavy lifting in this function is done by <code>geom_sf()</code>. This function recognizes the spatial geometries in our data and draws the borders for each tract. The argument <code>lwd</code> controls the thickness of these borders. I tried playing around with this option so that the border thickness is a function of the number of tracts in the input data. The more tracts, the thinner the border should be so that things don’t get too crowded. This will be relevant in a minute when we zoom in on different areas of San Diego.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="fu">compose</span>(make_log_prop_stro_map, st_crop_central_sd)(sd)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stderr">
-<pre><code>Warning: attribute variables are assumed to be spatially constant throughout
-all geometries</code></pre>
+<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>make_log_prop_stro_map <span class="ot">&lt;-</span> <span class="cf">function</span>(input_data) {</span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>  p <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(input_data) <span class="sc">+</span></span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">aes</span>(<span class="at">fill =</span> log_prop_stro) <span class="sc">+</span></span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_sf</span>(<span class="at">color =</span> <span class="st">"black"</span>, <span class="at">lwd =</span> <span class="dv">50</span> <span class="sc">/</span> <span class="fu">nrow</span>(input_data)) <span class="sc">+</span></span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">theme_void</span>() <span class="sc">+</span></span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a>    <span class="fu">scale_fill_viridis_log_prop_stro</span>() <span class="sc">+</span></span>
+<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a>    <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"Proportion of Short Term Rental Licenses</span><span class="sc">\n</span><span class="st">by Total Households per Census Tract"</span>)</span>
+<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">return</span>(p)</span>
+<span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb17-10"><a href="#cb17-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-11"><a href="#cb17-11" aria-hidden="true" tabindex="-1"></a>scale_fill_viridis_log_prop_stro <span class="ot">&lt;-</span> <span class="fu">partial</span>(</span>
+<span id="cb17-12"><a href="#cb17-12" aria-hidden="true" tabindex="-1"></a>  scale_fill_viridis_c, </span>
+<span id="cb17-13"><a href="#cb17-13" aria-hidden="true" tabindex="-1"></a>  <span class="at">labels =</span> <span class="cf">function</span>(x) <span class="fu">round</span>(<span class="fu">exp</span>(x), <span class="dv">3</span>),</span>
+<span id="cb17-14"><a href="#cb17-14" aria-hidden="true" tabindex="-1"></a>  <span class="at">breaks =</span> <span class="fu">log</span>(<span class="fu">c</span>(<span class="fl">0.005</span>, <span class="fl">0.02</span>, <span class="fl">0.1</span>, .<span class="dv">30</span>)),</span>
+<span id="cb17-15"><a href="#cb17-15" aria-hidden="true" tabindex="-1"></a>  <span class="at">name =</span> <span class="st">"Proportion"</span>,</span>
+<span id="cb17-16"><a href="#cb17-16" aria-hidden="true" tabindex="-1"></a>  <span class="at">option =</span> <span class="st">"B"</span>,</span>
+<span id="cb17-17"><a href="#cb17-17" aria-hidden="true" tabindex="-1"></a>  <span class="at">na.value =</span> <span class="st">"grey"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
+<p>You might be wondering what’s going on with <code>scale_fill_viridis_log_prop_stro()</code>. This is another function we are writing in order to control the color palette and legend in our map. The <code>partial()</code> function from the {purrr} package takes a function and returns a new function which is a copy of the original function with new default arguments. In this case, we’re taking {ggplot2}’s <code>scale_fill_viridis_c()</code> and adding some options which suit the type of map made by <code>make_log_prop_stro_map()</code>. One of the key arguments is <code>labels = function(x) round(exp(x), 3)</code>. By exponentiating our logged proportion STRO variable, we ensure that the legend labels on our map will be in the original, non-logged units. Using “partial” functions opens up a lot of possibilities in your coding. We could now use <code>scale_fill_viridis_log_prop_stro()</code> in other similar plots without copying and pasting a bunch of specific <code>scale_fill_viridis_c()</code> arguments if we wanted to. Read <a href="https://mikedecr.netlify.app/blog/partial_fns_ggplot/">about this here</a> if you’re interested in learning more about partial, or curried functions.</p>
+</section>
+<section id="the-maps" class="level2">
+<h2 class="anchored" data-anchor-id="the-maps">The Maps</h2>
+<p>Okay now it is FINALLY time to make some maps!</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="fu">make_log_prop_stro_map</span>(sd)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
-<p><img src="index_files/figure-html/unnamed-chunk-12-1.png" class="img-fluid" width="672"></p>
+<div id="fig-sd-county" class="quarto-figure quarto-figure-center anchored">
+<figure class="figure">
+<p><img src="index_files/figure-html/fig-sd-county-1.png" class="img-fluid figure-img" width="672"></p>
+<figcaption class="figure-caption">Figure&nbsp;2: San Diego County</figcaption>
+</figure>
 </div>
-<div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="co"># ggsave("/Users/bertrandwilden/Desktop/sd_stros.png")</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
+</div>
+<p>Wow, San Diego county is really big and we only have data for a small part of it. All those grey shaded regions either have zero STROs or they are not included in the San Diego city data set we started with. Perhaps if we squint really hard we can make out some geographic patterns.</p>
+<p>Wouldn’t it be nice if we could zoom in a bit? I experimented with a lot of different methods for accomplishing this, such as restricting the Census data to tracts in the <a href="https://en.wikipedia.org/wiki/Census-designated_place"><em>place</em> of San Diego city</a>, but the easiest method I found involved using <code>st_crop()</code> to filter out data which lies outside a box defined by four longitude and latitude points. To find the desired longitude and latitude points, you can use something like Google maps or you can make the map using <code>theme_bw()</code> as shown in <a href="#fig-sd-county-bw">Figure&nbsp;3</a> and go from there.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="fu">make_log_prop_stro_map</span>(sd) <span class="sc">+</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_bw</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div id="fig-sd-county-bw" class="quarto-figure quarto-figure-center anchored">
+<figure class="figure">
+<p><img src="index_files/figure-html/fig-sd-county-bw-1.png" class="img-fluid figure-img" width="672"></p>
+<figcaption class="figure-caption">Figure&nbsp;3: San Diego County</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<p>In keeping with our functional programming style, we’ll write some curried functions to accomplish the cropping. The functions <code>st_crop_sd()</code> and <code>st_crop_central_sd()</code> use my painstakingly chosen longitude and latitude values as defaults in the <code>st_crop()</code> function.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>st_crop_sd <span class="ot">&lt;-</span> <span class="fu">partial</span>(</span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>  st_crop, </span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">xmin =</span> <span class="sc">-</span><span class="fl">117.3</span>, <span class="at">xmax =</span> <span class="sc">-</span><span class="fl">116.99</span>,</span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">ymin =</span> <span class="dv">33</span>, <span class="at">ymax =</span> <span class="fl">32.4</span></span>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-7"><a href="#cb20-7" aria-hidden="true" tabindex="-1"></a>st_crop_central_sd <span class="ot">&lt;-</span> <span class="fu">partial</span>(</span>
+<span id="cb20-8"><a href="#cb20-8" aria-hidden="true" tabindex="-1"></a>  st_crop, </span>
+<span id="cb20-9"><a href="#cb20-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">xmin =</span> <span class="sc">-</span><span class="fl">117.3</span>, <span class="at">xmax =</span> <span class="sc">-</span><span class="dv">117</span>,</span>
+<span id="cb20-10"><a href="#cb20-10" aria-hidden="true" tabindex="-1"></a>  <span class="at">ymin =</span> <span class="fl">32.88</span>, <span class="at">ymax =</span> <span class="fl">32.67</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>There are a few ways we could use our new crop functions. We could take the <code>sd</code> data frame, pipe it into <code>st_crop_sd()</code> then pipe that into <code>make_log_prop_stro_map()</code>. But instead we are going to try to fully embrace a functional programming style approach by using function <em>composition</em> to make our final maps. The <code>compose()</code> function from {purrr} allows us to combine two functions together, evaluating one and then the other. The code below applies the <code>st_crop_sd</code> function to the <code>sd</code> object and then applies <code>make_log_prop_stro_map()</code> to the cropped data frame.<a href="#fn3" class="footnote-ref" id="fnref3" role="doc-noteref"><sup>3</sup></a> The result is <a href="#fig-sd-city">Figure&nbsp;4</a>. Nice, we successfully filtered out all those Census tracts in San Diego county with no data, thereby showing the STRO density much more clearly!</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="fu">compose</span>(make_log_prop_stro_map, st_crop_sd)(sd)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div id="fig-sd-city" class="quarto-figure quarto-figure-center anchored">
+<figure class="figure">
+<p><img src="index_files/figure-html/fig-sd-city-1.png" class="img-fluid figure-img" width="672"></p>
+<figcaption class="figure-caption">Figure&nbsp;4: San Diego County</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<p>We can zoom in even further with <code>st_crop_central_sd()</code> in <a href="#fig-sd-central">Figure&nbsp;5</a>. Looks like there are a ton of Airbnbs in Mission Bay and parts of Pacific Beach. Obviously these are desirable vacation spots in San Diego, but these neighborhoods are also comprised mostly of 1-2 story apartments/houses. If we legalized denser housing here maybe more people could live within walking distance of the beach. Wouldn’t that be nice!</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="fu">compose</span>(make_log_prop_stro_map, st_crop_central_sd)(sd)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div id="fig-sd-central" class="quarto-figure quarto-figure-center anchored">
+<figure class="figure">
+<p><img src="index_files/figure-html/fig-sd-central-1.png" class="img-fluid figure-img" width="672"></p>
+<figcaption class="figure-caption">Figure&nbsp;5: San Diego County</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<p>And that’s how you can make nice-looking choropleth maps in R using geocoded data.</p>
+<p>So is Airbnb the prime culprit in San Diego’s housing crisis? Using the Census API call below we see that San Diego City has 545,792 total housing units. The STRO data contain around 7828 licenses, which comes out to 1.4% of the total housing stock. It’s going to take a lot more supply than that to make housing affordable in San Diego. Instead of focusing on Airbnbs, maybe we should work towards supporting things that could really make a difference like <a href="https://www.sandiegouniontribune.com/news/politics/story/2023-05-17/san-diego-mayor-proposes-sweeping-package-of-housing-incentives-and-regulation-changes">SB-10</a>.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="fu">get_acs</span>(</span>
 <span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">geography =</span> <span class="st">"place"</span>,</span>
@@ -350,9 +431,6 @@ all geometries</code></pre>
 <span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">output =</span> <span class="st">"wide"</span></span>
 <span id="cb23-6"><a href="#cb23-6" aria-hidden="true" tabindex="-1"></a>) <span class="sc">|&gt;</span> </span>
 <span id="cb23-7"><a href="#cb23-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(NAME <span class="sc">==</span> <span class="st">"San Diego city, California"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stderr">
-<pre><code>Getting data from the 2017-2021 5-year ACS</code></pre>
-</div>
 <div class="cell-output cell-output-stdout">
 <pre><code># A tibble: 1 × 4
   GEOID   NAME                       total_housing_units B25001_001M
@@ -369,6 +447,8 @@ all geometries</code></pre>
 
 <ol>
 <li id="fn1"><p>As someone mentioned in my Reddit post, there are alternative ways to map the density of geo-spatial data—such as plotting the points directly on the map. The way I’m doing it here runs the risk of running into the <a href="https://en.wikipedia.org/wiki/Modifiable_areal_unit_problem">Modifiable areal unit problem</a><a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn2"><p>In the version of the final map I posted to Reddit, I accidentally used the ACS variable for <em>total households</em>. This corresponds to sets of people living in each Census tract, rather than physical housing units. Total physical housing units will generally be more than total households because many units will be vacant at any given time. The two variables, however, appear to be roughly proportional to one another. So the map I originally posted was incorrect in terms of magnitude but shows a similar pattern of STRO density as the corrected map.<a href="#fnref2" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn3"><p>Again, Michael DeCrescenzo has a nice post on function compostion here: <a href="https://mikedecr.netlify.app/blog/composition/">https://mikedecr.netlify.app/blog/composition/</a><a href="#fnref3" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
 </ol>
 </section></div></main> <!-- /main -->
 <script id="quarto-html-after-body" type="application/javascript">
