@@ -213,6 +213,7 @@ We can zoom in even further with `st_crop_central_sd()` in @fig-sd-central. Look
 
 ```{r}
 #| warning: false
+#| classes: preview-image
 #| label: fig-sd-central
 #| fig-cap: "Central San Diego"
 compose(make_log_prop_stro_map, st_crop_central_sd)(sd)
@@ -231,4 +232,9 @@ get_acs(
   output = "wide"
 ) |> 
   filter(NAME == "San Diego city, California")
+```
+
+
+```{r}
+sessionInfo()
 ```

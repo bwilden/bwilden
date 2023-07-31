@@ -303,6 +303,7 @@ fit_hurdle |> gather_draws(`b_.*`, regex = TRUE) |>
 ```
 
 ```{r}
+#| classes: preview-image
 pp_check(fit_hurdle, ndraws = 100)
 ```
 
