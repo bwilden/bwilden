@@ -1,11 +1,17 @@
 ---
-title: "SD - STRO"
+title: "Mapping Airbnbs in San Diego"
 author: "Bertrand Wilden"
-date: "2023-06-21"
-categories: [GIS]
+date: "2023-07-31"
+categories: [GIS, Tutorial]
 max-description-length: 20
-draft: true
+draft: false
 ---
+
+```{css, echo=FALSE}
+.title {
+  color: #f5f5f5;
+}
+```
 
 About a week ago on the [r/SanDiegan subreddit](https://www.reddit.com/r/SanDiegan/comments/158psns/any_data_analysts_want_to_dig_into_stro_licenses/) someone posted a [link to new data](https://data.sandiego.gov/datasets/stro-licenses/) from the City of San Diego on Short-Term Residential Occupancy (STRO) licenses. These data show the addresses and owners of every licensed Airbnb (and other similar arrangements, I guess) in the city. Airbnb's are a soure of ire among some San Diego residents for supposedly wasting our precious housing supply. My view is that this issue is a bit of a red-herring. Housing in California cities like San Diego is so catastrophically under-supplied due to years of restrictive zoning laws that, even if Airbnbs were all made illegal tomorrow, it wouldn't make much of a difference.
 
@@ -199,7 +205,7 @@ There are a few ways we could use our new crop functions. We could take the `sd`
 ```{r}
 #| warning: false
 #| label: fig-sd-city
-#| fig-cap: "San Diego County"
+#| fig-cap: "San Diego City"
 compose(make_log_prop_stro_map, st_crop_sd)(sd)
 ```
 
@@ -208,7 +214,7 @@ We can zoom in even further with `st_crop_central_sd()` in @fig-sd-central. Look
 ```{r}
 #| warning: false
 #| label: fig-sd-central
-#| fig-cap: "San Diego County"
+#| fig-cap: "Central San Diego"
 compose(make_log_prop_stro_map, st_crop_central_sd)(sd)
 ```
 

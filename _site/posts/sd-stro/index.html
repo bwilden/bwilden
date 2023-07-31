@@ -7,9 +7,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 <meta name="author" content="Bertrand Wilden">
-<meta name="dcterms.date" content="2023-06-21">
+<meta name="dcterms.date" content="2023-07-31">
 
-<title>Bertrand Wilden - SD - STRO</title>
+<title>Bertrand Wilden - Mapping Airbnbs in San Diego</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -141,9 +141,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <header id="title-block-header" class="quarto-title-block default toc-left page-columns page-full">
   <div class="quarto-title-banner page-columns page-full">
     <div class="quarto-title column-body">
-      <h1 class="title">SD - STRO</h1>
+      <h1 class="title">Mapping Airbnbs in San Diego</h1>
                                 <div class="quarto-categories">
                 <div class="quarto-category">GIS</div>
+                <div class="quarto-category">Tutorial</div>
               </div>
                   </div>
   </div>
@@ -161,7 +162,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       <div>
       <div class="quarto-title-meta-heading">Published</div>
       <div class="quarto-title-meta-contents">
-        <p class="date">June 21, 2023</p>
+        <p class="date">July 31, 2023</p>
       </div>
     </div>
     
@@ -193,6 +194,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 
 
+<div class="cell">
+<style type="text/css">
+.title {
+  color: #f5f5f5;
+}
+</style>
+</div>
 <p>About a week ago on the <a href="https://www.reddit.com/r/SanDiegan/comments/158psns/any_data_analysts_want_to_dig_into_stro_licenses/">r/SanDiegan subreddit</a> someone posted a <a href="https://data.sandiego.gov/datasets/stro-licenses/">link to new data</a> from the City of San Diego on Short-Term Residential Occupancy (STRO) licenses. These data show the addresses and owners of every licensed Airbnb (and other similar arrangements, I guess) in the city. Airbnb’s are a soure of ire among some San Diego residents for supposedly wasting our precious housing supply. My view is that this issue is a bit of a red-herring. Housing in California cities like San Diego is so catastrophically under-supplied due to years of restrictive zoning laws that, even if Airbnbs were all made illegal tomorrow, it wouldn’t make much of a difference.</p>
 <p>In this post I’m going to walk through how to make some maps with this STRO data using R. I <a href="https://www.reddit.com/r/SanDiegan/comments/15ahjyb/short_term_rental_licenses_map/">posted one these maps to Reddit</a> but made an embarrassing error which resulted in the incorrect magnitudes being displayed. Always check your work before posting something online!</p>
 <section id="introducing-the-data" class="level2">
@@ -404,7 +412,7 @@ If this is slow, try a larger area threshold value.</code></pre>
 <div id="fig-sd-city" class="quarto-figure quarto-figure-center anchored">
 <figure class="figure">
 <p><img src="index_files/figure-html/fig-sd-city-1.png" class="img-fluid figure-img" width="672"></p>
-<figcaption class="figure-caption">Figure&nbsp;4: San Diego County</figcaption>
+<figcaption class="figure-caption">Figure&nbsp;4: San Diego City</figcaption>
 </figure>
 </div>
 </div>
@@ -416,13 +424,13 @@ If this is slow, try a larger area threshold value.</code></pre>
 <div id="fig-sd-central" class="quarto-figure quarto-figure-center anchored">
 <figure class="figure">
 <p><img src="index_files/figure-html/fig-sd-central-1.png" class="img-fluid figure-img" width="672"></p>
-<figcaption class="figure-caption">Figure&nbsp;5: San Diego County</figcaption>
+<figcaption class="figure-caption">Figure&nbsp;5: Central San Diego</figcaption>
 </figure>
 </div>
 </div>
 </div>
 <p>And that’s how you can make nice-looking choropleth maps in R using geocoded data.</p>
-<p>So is Airbnb the prime culprit in San Diego’s housing crisis? Using the Census API call below we see that San Diego City has 545,792 total housing units. The STRO data contain around 7828 licenses, which comes out to 1.4% of the total housing stock. It’s going to take a lot more supply than that to make housing affordable in San Diego. Instead of focusing on Airbnbs, maybe we should work towards supporting things that could really make a difference like <a href="https://www.sandiegouniontribune.com/news/politics/story/2023-05-17/san-diego-mayor-proposes-sweeping-package-of-housing-incentives-and-regulation-changes">SB-10</a>.</p>
+<p>So is Airbnb the big villain some make it out to be? Using the Census API call below we see that San Diego City has 545,792 total housing units. The STRO data contain around 7828 licenses, which comes out to 1.4% of the total housing stock. It’s going to take a lot more supply than that to make housing affordable in San Diego. Instead of focusing on Airbnbs, maybe we should work towards supporting things that could really make a difference like <a href="https://www.sandiegouniontribune.com/news/politics/story/2023-05-17/san-diego-mayor-proposes-sweeping-package-of-housing-incentives-and-regulation-changes">SB-10</a>.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="fu">get_acs</span>(</span>
 <span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">geography =</span> <span class="st">"place"</span>,</span>
