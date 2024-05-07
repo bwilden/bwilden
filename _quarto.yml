@@ -10,8 +10,6 @@ website:
       - blog.qmd
       - icon: github
         href: https://github.com/bwilden
-      - icon: twitter
-        href: https://twitter.com/bertrand_wilden
 format:
   html:
     theme: lux

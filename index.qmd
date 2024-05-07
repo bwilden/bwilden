@@ -5,15 +5,9 @@ engine: knitr
 about:
   template: jolla
   links:
-    - icon: twitter
-      text: Twitter
-      href: https://twitter.com/bertrand_wilden
     - icon: github
       text: Github
       href: https://github.com/bwilden
-    - icon: linkedin
-      text: LinkedIn
-      href: https://www.linkedin.com/in/bertrand-wilden-84041a153/
 
 ---
 
@@ -25,7 +19,7 @@ about:
 
 ::: {.justify}
 
-Hi! I am a data scientist and PhD Candidate at UC San Diego finishing up a degree in Political Science. My research involves building Bayesian statistical models to measure latent variables such as political ideology, and developing methods for incorporating the uncertainty from these measurements into downstream analysis. I am also interested in open source software development in R.
+Hello! I am a PhD data scientist specializing in Bayesian modeling methods. My research involves building statistical models to measure latent variables such as political ideology, and developing methods for incorporating the uncertainty from these measurements into downstream analysis. This blog is for showcasing some of my research and other odd quantitative projects I am working on.
 
 When I'm waiting for my MCMC chains to finish I like to rock climb, play board games, and go backpacking.
 
