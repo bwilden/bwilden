@@ -1,0 +1,205 @@
+---
+title: "The NYC Rat Index"
+author: "Bertrand Wilden"
+date: "2023-06-21"
+categories: [Bayes, GIS]
+max-description-length: 20
+draft: true
+---
+
+Rats are "public enemy number one" according to New York City Mayor Eric Adams. The health problems associated with these ubiquitous rodents led to the establishment of a ["Rat Czar"](https://www.nyc.gov/office-of-the-mayor/news/249-23/mayor-adams-anoints-kathleen-corradi-nyc-s-first-ever-rat-czar-#/0) last year, who has been tasked with detecting and exterminating rat populations across the five boroughs. While I respect the lives all creatures great and small, mapping out the concentration of rats in the city seems like a worthwhile public service. With this goal in mind, I would like to introduce the all-new **NYC Rat Index**.
+
+```{r}
+#| message: false
+#| warning: false
+# Packages used:
+library(dplyr)
+library(tidyr)
+library(tidycensus)
+library(ggplot2)
+library(spdep)
+library(sf)
+library(INLA)
+library(leaflet)
+```
+
+```{css, echo=FALSE}
+.title {
+  color: #f5f5f5;
+}
+```
+
+
+
+```{r}
+rats <- readr::read_csv("https://data.cityofnewyork.us/resource/p937-wjvj.csv?$limit=250000")
+```
+
+```{r}
+rats_zip <- rats |> 
+  mutate(year = lubridate::year(inspection_date)) |> 
+  summarise(n_rats = sum(result == "Rat Activity", na.rm = TRUE),
+            .by = c("zip_code", "borough", "boro_code", "year")) |> 
+  mutate(zip_n = as.integer(as.factor(zip_code))) |>
+  filter(!is.na(borough), zip_code != "0", year %in% 2010:2023)
+```
+
+```{r}
+zips = get_acs(
+  geography = "zcta",
+  variables = c("total_population" = "B01003_001",
+                "buildings_before_1939" = "B25034_011",
+                "n_kitchens" = "B25051_002",
+                "n_food_workers" = "C24050_040"),
+  year = 2020,
+  geometry = TRUE,
+  output = "wide",
+  progress = FALSE
+)
+```
+
+
+```{r}
+nyc_zips <- zips |> 
+  mutate(zip_code = as.numeric(GEOID)) |> 
+  filter(zip_code %in% rats_zip$zip_code)
+```
+
+```{r}
+rats_zip <- rats_zip |> 
+  inner_join(nyc_zips, by = "zip_code")
+```
+
+```{r}
+zips_s <- as_Spatial(st_as_sf(rats_zip))
+zips_adj <- poly2nb(st_as_sf(rats_zip))
+```
+
+```{r}
+add_neighbors <- function(nb_obj, links, node_vec) {
+  for (i in seq_along(links)) {
+    nb_obj[[match(names(links[i]), node_vec)]] <- setdiff(as.integer(sort(c(nb_obj[[match(names(links[i]), node_vec)]], match(links[i], node_vec)))), 0)
+    nb_obj[[match(links[i], node_vec)]] <- setdiff(as.integer(sort(c(nb_obj[[match(links[i], node_vec)]], match(names(links[i]), node_vec)))), 0)
+  }
+  return(nb_obj)
+}
+```
+
+```{r}
+connect_nyc_neighbors <- purrr::partial(
+  add_neighbors,
+  links = c("11414" = "11693", # Cross Bay Blvd
+            "11234" = "11697", # Marine Parkway Bridge
+            "10305" = "11209", # Verrazzano Bridge
+            "10004" = "11231", # Brooklyn-Battery Tunnel
+            "10038" = "11201", # Brooklyn Bridge
+            "10002" = "11201", # Manhattan Bridge
+            "10002" = "11211", # Williamsburg Bridge
+            "10017" = "11109", # Queens-Midtown Tunnel
+            "10022" = "11101", # Queensboro Bridge
+            "10044" = "11106", # Roosevelt Island Bridge
+            "10035" = "11102", # Triborough Bridge
+            "10035" = "10454", # Triborough Bridge
+            "10037" = "10451", # Madison Ave. Bridge
+            "10039" = "10451", # 145th St. Bridge
+            "10033" = "10453", # Washington Bridge
+            "10034" = "10468", # University Heights Bridge
+            "10034" = "10463", # Broadway Bridge
+            "10465" = "11360", # Throgs Neck Bridge
+            "10465" = "11357") # Whitestone Bridge
+)
+
+zips_adj2 = connect_nyc_neighbors(
+  nb_obj = zips_adj, 
+  node_vec = zips_s$zip_code
+)
+```
+
+```{r}
+zips_only <- rats_zip |> 
+  st_as_sf() |> 
+  select(zip_code) |> 
+  distinct()
+
+zips_disconnected <- poly2nb(zips_only)
+
+zips_connected <- zips_disconnected |> 
+  connect_nyc_neighbors(node_vec = zips_only$zip_code)
+
+nb_to_sf <- function(nb_obj, sf_obj) {
+  sf_out <- as(nb2lines(nb_obj, coords = coordinates(as_Spatial(sf_obj))), "sf") |> 
+    st_set_crs(st_crs(sf_obj))
+  return(sf_out)
+}
+
+ggplot(st_as_sf(zips_only)) +
+  geom_sf(color = 'white') +
+  geom_sf(data = nb_to_sf(zips_connected, zips_only), color = "red") +
+  geom_sf(data = nb_to_sf(zips_disconnected, zips_only)) +
+  theme_void()
+```
+
+```{r}
+w_nyc <- nb2mat(zips_adj2, style = "B") 
+
+fit = inla(
+  n_rats ~ total_populationE + buildings_before_1939E + n_kitchensE + n_food_workersE +
+    f(zip_n, model = "bym", graph = w_nyc),
+  data = rats_zip,
+  family = "poisson",
+  control.compute = list(dic = TRUE, waic = TRUE, cpo = TRUE, config = TRUE),
+  control.predictor = list(compute = TRUE)
+)
+```
+
+```{r}
+rats_zip$mode = fit$summary.fitted.values$mode
+cor(rats_zip$mode, rats_zip$n_rats)
+
+rats_zip |> 
+  st_as_sf() |> 
+  ggplot(aes(fill = log(mode))) +
+  geom_sf() + 
+  scale_fill_viridis_c(option = "A", 
+                       labels = function(x) round(exp(x), 2),
+                       breaks = log(c(1, 12, 130))) +
+  theme_void()
+```
+
+```{r}
+l <- st_as_sf(rats_zip) |> 
+  leaflet() |> 
+  addTiles()
+
+labels <- sprintf(
+  "<strong> ZIP Code: %s </strong> <br/>
+  Rat Index: %s",
+  rats_zip$zip_code, round(rats_zip$mode, 2)
+) %>%
+  lapply(htmltools::HTML)
+
+pal <- colorNumeric(
+  palette = "plasma",
+  domain = log(rats_zip$mode)
+  )
+
+l |> 
+  addPolygons(
+    smoothFactor = 0.2, fillOpacity = .5,
+    fillColor = ~pal(mode),
+    weight = .1,
+    highlightOptions = highlightOptions(weight = 4, color = "white"),
+    label = labels,
+    labelOptions = labelOptions(
+      style = list(
+        "font-weight" = "normal",
+        padding = "3px 8px"
+      ),
+      textsize = "15px", direction = "auto"
+    )
+  ) |> 
+  addLegend(
+    pal = pal, values = ~log(mode), opacity = 1,
+    title = "Rat Index", position = "bottomright"
+  )
+```
