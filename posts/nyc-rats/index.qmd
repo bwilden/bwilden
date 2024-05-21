@@ -7,7 +7,9 @@ max-description-length: 20
 draft: true
 ---
 
-Rats are "public enemy number one" according to New York City Mayor Eric Adams. The health problems associated with these ubiquitous rodents led to the establishment of a ["Rat Czar"](https://www.nyc.gov/office-of-the-mayor/news/249-23/mayor-adams-anoints-kathleen-corradi-nyc-s-first-ever-rat-czar-#/0) last year, who has been tasked with detecting and exterminating rat populations across the five boroughs. While I respect the lives all creatures great and small, mapping out the concentration of rats in the city seems like a worthwhile public service. With this goal in mind, I would like to introduce the all-new **NYC Rat Index**.
+Rats are "public enemy number one"---at least so says New York City Mayor Eric Adams. Last year the city established a ["Rat Czar"](https://www.nyc.gov/office-of-the-mayor/news/249-23/mayor-adams-anoints-kathleen-corradi-nyc-s-first-ever-rat-czar-#/0) who has been tasked with detecting and exterminating rat populations across the five boroughs. While I respect the lives all creatures great and small, mapping out the concentration of rats in the city seems like a worthwhile public service. With this goal in mind, introduce the all-new **NYC Rat Index**.
+
+[Discuss method/R overview]
 
 ```{r}
 #| message: false
@@ -17,6 +19,7 @@ library(dplyr)
 library(tidyr)
 library(tidycensus)
 library(ggplot2)
+library(MetBrewer)
 library(spdep)
 library(sf)
 library(INLA)
@@ -29,51 +32,104 @@ library(leaflet)
 }
 ```
 
+# Rat Data
 
+The data I use to construct the **Rat Index** come from the [https://data.cityofnewyork.us/Health/Rodent-Inspection/p937-wjvj/about_data](NYC Rat Information Portal (RIP)).
 
 ```{r}
-rats <- readr::read_csv("https://data.cityofnewyork.us/resource/p937-wjvj.csv?$limit=250000")
+rats <- readr::read_csv("https://data.cityofnewyork.us/resource/p937-wjvj.csv?$limit=2500000")
 ```
+
+Each of the 2.5 million observations is a rodent inspection from the year 2010 to present. A lot of inspections don't find evidence of rats, so I focus on only the rows where `result == "Rat Activity"`. Mapping rat populations with this data is a bit problematic because there is probably some bias inherent in inspection rates. The RIP discusses this in their disclaimer:
+
+> Notes on data limitations: Please note that if a property/taxlot does not appear in the file, that does not indicate an absence of rats - rather just that it has not been inspected. Similarly, neighborhoods with higher numbers properties with active rat signs may not actually have higher rat populations but simply have more inspections.
+
+I will attempt to deal with this bias by building a geospatial model of rat activity---rather than by simply using the raw data on its own. The idea here is that we can infer rat activity in areas with low inspection rates by how proximate they are to areas with high rat activity/inspection rates in the data. If there's one thing I know about rats it's that they love scurrying around from place to place.
 
 ```{r}
 rats_zip <- rats |> 
   mutate(year = lubridate::year(inspection_date)) |> 
   summarise(n_rats = sum(result == "Rat Activity", na.rm = TRUE),
             .by = c("zip_code", "borough", "boro_code", "year")) |> 
-  mutate(zip_n = as.integer(as.factor(zip_code))) |>
-  filter(!is.na(borough), zip_code != "0", year %in% 2010:2023)
+  # removing some invalid rows
+  filter(!is.na(borough), zip_code != "0", year %in% 2016:2021) |> 
+  # model functions like data to be indexed as 1, 2, 3, etc
+  mutate(zip_code_code = as.integer(as.factor(zip_code)),
+         year_code = as.integer(as.factor(year)))
 ```
 
+Let's start by creating a new data frame, `rats_zip`, which collapses the number of rat activity observations (`n_rats`) down to the ZIP code-year level. I chose ZIP code as the level of spatial aggregation because most people know which ZIP code they live in (as opposed to Census tract or other designation). This will make it easier to know the **Rat Index** value where you live. The downside of using ZIP codes, however, is that they are constructed to facilitate mail delivery---not balanced geospatial analysis. In Manhattan, [https://convene.com/catalyst/office/buildings-new-york-city-own-zip-code/](42 *buildings*) have their own ZIP code. 
+
 ```{r}
-zips = get_acs(
+#| message: false
+nyc_zips <- get_acs(
   geography = "zcta",
-  variables = c("total_population" = "B01003_001",
+  variables = c("n_kitchens" = "B25051_002",
+                "n_food_workers" = "C24050_040",
                 "buildings_before_1939" = "B25034_011",
-                "n_kitchens" = "B25051_002",
-                "n_food_workers" = "C24050_040"),
-  year = 2020,
+                "total_population" = "B01003_001"),
+  year = 2021,
+  survey = "acs5",
   geometry = TRUE,
   output = "wide",
   progress = FALSE
-)
-```
-
-
-```{r}
-nyc_zips <- zips |> 
+) |> 
   mutate(zip_code = as.numeric(GEOID)) |> 
   filter(zip_code %in% rats_zip$zip_code)
-```
 
-```{r}
+# Merge the ZIP data in with the rats data
 rats_zip <- rats_zip |> 
-  inner_join(nyc_zips, by = "zip_code")
+  inner_join(nyc_zips, by = "zip_code") |> 
+  # some ZIPs got put in the wrong borough
+  mutate(borough = case_when(zip_code == 10463 ~ "Bronx",
+                             zip_code == 10451 ~ "Bronx",
+                             zip_code == 11370 ~ "Queens",
+                             zip_code == 11207 ~ "Brooklyn",
+                             .default = borough))
 ```
 
+We will grab ZIP code spatial geometries, as well as some model covariates, using the **tidycensus** R package. These covariates are variables from the Census American Community Survey (ACS) which I believe can help predict rat activity. Because most of my knowledge about rat psychology comes from the movie Ratatouille, the number of kitchens and the number of food workers (e.g. chefs) seemed like they would be very important. The number of old buildings (built before 1939) in a ZIP code also seems relevant. I envision rats having an easier time scurrying around and infiltrating older buildings compared to new ones. And lastly we'll use the total population variable because apparently rats like living near us humans.
+
+## Geospatial Wrangling
+
+In addition to the outcome variable, `n_rats`, and the Census covariates we will use to predict rat activity, the `rats_zip` data frame has a `geometry` variable containing the spatial polygon information for each ZIP code. These geometries can be used to build a neighbor adjacency graph which we will need for our spatial model later. To infer rat activity from proximate ZIP codes, we need to know which ZIP codes are neighbors.
+
 ```{r}
-zips_s <- as_Spatial(st_as_sf(rats_zip))
-zips_adj <- poly2nb(st_as_sf(rats_zip))
+# Using only zip codes, boroughs, and geometry to illustrate the neighbor graph
+zips_only <- rats_zip |> 
+  st_as_sf() |> 
+  select(zip_code, borough) |> 
+  distinct()
+
+# Neighbor adjacency graph
+zips_adj <- poly2nb(zips_only)
 ```
+
+The function `poly2nb()` from the **spdep** package takes our data with spatial geometry and returns a neighbor adjacency graph. We could take a look at this graph using the base `plot(zips_adj)` function, but I prefer the look and flexibility of ggplot
+
+```{r}
+nb_to_sf <- function(nb_obj, sf_obj) {
+  sf_out <- as(nb2lines(nb_obj, coords = coordinates(as_Spatial(sf_obj))), "sf") |> 
+    st_set_crs(st_crs(sf_obj))
+  return(sf_out)
+}
+```
+
+The function `nb_to_sf()` can be used to convert `zips_adj` back into an `sf` data object which plays nicely with ggplot functions.[^1]
+
+[^1]: Code adapted from Maxwell B. Joseph https://mbjoseph.github.io/posts/2018-12-27-plotting-spatial-neighbors-in-ggplot2/
+
+
+```{r}
+#| warning: false
+ggplot(zips_only) +
+  geom_sf(color = 'white', aes(fill = borough)) +
+  geom_sf(data = nb_to_sf(zips_adj, zips_only)) +
+  scale_fill_manual(values = met.brewer("Hokusai3")) + 
+  theme_void()
+```
+
+And here is our beautiful NYC ZIP code adjacency graph! Unfortunately for us, however, the `poly2nb()` function only connected ZIP codes if they were terrestrial neighbors. This leaves all the boroughs except Brooklyn and Queens disconnected from one another. Rockaway beach area is also isolated from the rest of the city, and poor Roosevelt Island is all alone with zero neighbors. We need to do some adjustments if we want to properly model rat activity. While I'm not sure whether a rat could swim across the East River from Manhattan to Brooklyn, I have first hand knowledge of them scurrying on the city's various tunnels and bridges.
 
 ```{r}
 add_neighbors <- function(nb_obj, links, node_vec) {
@@ -85,8 +141,10 @@ add_neighbors <- function(nb_obj, links, node_vec) {
 }
 ```
 
+It turns out that adding manual connections to a `nb` spatial neighbors object is extremely annoying. The **spdep** package supposedly has a function for this: `edit.nb()`, but you will get an error saying "do not use in RStudio" (???). I refuse to work out of the Console like a caveman, so instead I wrote a function `add_neighbors()` to help with this. Enter your original `nb` spatial neighbors object, a vector of neighbor pairs you wish to connect, and the geography variable from the data frame you used to create the `nb` object---and you will get out a new `nb` spatial neighbors object with all those nodes connected. The `links` argument in this example will be ZIP code pairs and the `node_vec` argument will be the ZIP code column in `zips_only`, but `add_neighbors()` will also work if you want to connect Census tracts or any other geographic unit.
+
 ```{r}
-connect_nyc_neighbors <- purrr::partial(
+connect_nyc_neighbor_zips <- purrr::partial(
   add_neighbors,
   links = c("11414" = "11693", # Cross Bay Blvd
             "11234" = "11697", # Marine Parkway Bridge
@@ -108,43 +166,45 @@ connect_nyc_neighbors <- purrr::partial(
             "10465" = "11360", # Throgs Neck Bridge
             "10465" = "11357") # Whitestone Bridge
 )
-
-zips_adj2 = connect_nyc_neighbors(
-  nb_obj = zips_adj, 
-  node_vec = zips_s$zip_code
-)
 ```
 
+Because I will use `add_neighbors()` multiple times in this project, I created a `purrr::partial()` version of it with the major NYC bridges and tunnels connected by default. Now I know what some of you are thinking. What about the *SUBWAY*?! Rats *LOVE* the *SUBWAY*! Sorry but it was tedious enough looking up all these bridges. A serious GIS specialist could probably do something fancy like overlay a shapefile of the NYC subway system on top of the ZIP code shapefile, and add connections that way. But for now we will just assume that rats are banned from riding the subway.
+
 ```{r}
-zips_only <- rats_zip |> 
-  st_as_sf() |> 
-  select(zip_code) |> 
-  distinct()
+zips_adj_c <- zips_adj |> 
+  connect_nyc_neighbor_zips(node_vec = zips_only$zip_code)
+```
 
-zips_disconnected <- poly2nb(zips_only)
+With that caveat out of the way let's create a new spatial neighbor object, `zips_adj_c`, with the ZIP codes that we want connected. 
 
-zips_connected <- zips_disconnected |> 
-  connect_nyc_neighbors(node_vec = zips_only$zip_code)
-
-nb_to_sf <- function(nb_obj, sf_obj) {
-  sf_out <- as(nb2lines(nb_obj, coords = coordinates(as_Spatial(sf_obj))), "sf") |> 
-    st_set_crs(st_crs(sf_obj))
-  return(sf_out)
-}
-
-ggplot(st_as_sf(zips_only)) +
-  geom_sf(color = 'white') +
-  geom_sf(data = nb_to_sf(zips_connected, zips_only), color = "red") +
-  geom_sf(data = nb_to_sf(zips_disconnected, zips_only)) +
+```{r}
+#| warning: false
+ggplot(zips_only) +
+  geom_sf(color = "white", aes(fill = borough)) +
+  geom_sf(data = nb_to_sf(zips_adj_c, zips_only), color = "red") +
+  geom_sf(data = nb_to_sf(zips_adj, zips_only)) +
+  scale_fill_manual(values = met.brewer("Hokusai3")) + 
   theme_void()
 ```
 
-```{r}
-w_nyc <- nb2mat(zips_adj2, style = "B") 
+Plotting these two graphs on top of each other confirms that we fully connected the entire city! The rats are now free to roam from borough to borough in our model.
 
-fit = inla(
+Speaking of the model, let's return to the ZIP-year level data, `rats_zip`, we created earlier. 
+
+```{r}
+zips_adj_long <- rats_zip |> 
+  st_as_sf() |> 
+  poly2nb() |> 
+  connect_nyc_neighbor_zips(node_vec = rats_zip$zip_code)
+
+zip_mat <- nb2mat(zips_adj_long, style = "B") 
+```
+
+
+```{r}
+rat_mod = inla(
   n_rats ~ total_populationE + buildings_before_1939E + n_kitchensE + n_food_workersE +
-    f(zip_n, model = "bym", graph = w_nyc),
+    f(zip_code_code, model = "bym", graph = zip_mat),
   data = rats_zip,
   family = "poisson",
   control.compute = list(dic = TRUE, waic = TRUE, cpo = TRUE, config = TRUE),
@@ -153,16 +213,17 @@ fit = inla(
 ```
 
 ```{r}
-rats_zip$mode = fit$summary.fitted.values$mode
+rats_zip$mode = rat_mod$summary.fitted.values$mode
 cor(rats_zip$mode, rats_zip$n_rats)
 
 rats_zip |> 
   st_as_sf() |> 
   ggplot(aes(fill = log(mode))) +
   geom_sf() + 
-  scale_fill_viridis_c(option = "A", 
+  scale_fill_viridis_c(option = "B", 
                        labels = function(x) round(exp(x), 2),
-                       breaks = log(c(1, 12, 130))) +
+                       breaks = log(c(1, 10, 130))
+                       ) +
   theme_void()
 ```
 
