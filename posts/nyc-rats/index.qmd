@@ -52,10 +52,7 @@ rats_zip <- rats |>
   summarise(n_rats = sum(result == "Rat Activity", na.rm = TRUE),
             .by = c("zip_code", "borough", "boro_code", "year")) |> 
   # removing some invalid rows
-  filter(!is.na(borough), zip_code != "0", year %in% 2016:2021) |> 
-  # model functions like data to be indexed as 1, 2, 3, etc
-  mutate(zip_code_code = as.integer(as.factor(zip_code)),
-         year_code = as.integer(as.factor(year)))
+  filter(!is.na(borough), zip_code != "0", year %in% 2016:2021)
 ```
 
 Let's start by creating a new data frame, `rats_zip`, which collapses the number of rat activity observations (`n_rats`) down to the ZIP code-year level. I chose ZIP code as the level of spatial aggregation because most people know which ZIP code they live in (as opposed to Census tract or other designation). This will make it easier to know the **Rat Index** value where you live. The downside of using ZIP codes, however, is that they are constructed to facilitate mail delivery---not balanced geospatial analysis. In Manhattan, [https://convene.com/catalyst/office/buildings-new-york-city-own-zip-code/](42 *buildings*) have their own ZIP code. 
@@ -80,12 +77,15 @@ nyc_zips <- get_acs(
 # Merge the ZIP data in with the rats data
 rats_zip <- rats_zip |> 
   inner_join(nyc_zips, by = "zip_code") |> 
-  # some ZIPs got put in the wrong borough
+         # some ZIPs got put in the wrong borough
   mutate(borough = case_when(zip_code == 10463 ~ "Bronx",
                              zip_code == 10451 ~ "Bronx",
                              zip_code == 11370 ~ "Queens",
                              zip_code == 11207 ~ "Brooklyn",
-                             .default = borough))
+                             .default = borough),
+         # model functions like data to be indexed as 1, 2, 3, etc
+         zip_code_code = as.integer(as.factor(zip_code)),
+         year_code = as.integer(as.factor(year)))
 ```
 
 We will grab ZIP code spatial geometries, as well as some model covariates, using the **tidycensus** R package. These covariates are variables from the Census American Community Survey (ACS) which I believe can help predict rat activity. Because most of my knowledge about rat psychology comes from the movie Ratatouille, the number of kitchens and the number of food workers (e.g. chefs) seemed like they would be very important. The number of old buildings (built before 1939) in a ZIP code also seems relevant. I envision rats having an easier time scurrying around and infiltrating older buildings compared to new ones. And lastly we'll use the total population variable because apparently rats like living near us humans.
@@ -168,7 +168,7 @@ connect_nyc_neighbor_zips <- purrr::partial(
 )
 ```
 
-Because I will use `add_neighbors()` multiple times in this project, I created a `purrr::partial()` version of it with the major NYC bridges and tunnels connected by default. Now I know what some of you are thinking. What about the *SUBWAY*?! Rats *LOVE* the *SUBWAY*! Sorry but it was tedious enough looking up all these bridges. A serious GIS specialist could probably do something fancy like overlay a shapefile of the NYC subway system on top of the ZIP code shapefile, and add connections that way. But for now we will just assume that rats are banned from riding the subway.
+Because I will use `add_neighbors()` multiple times in this project, I created a `purrr::partial()` version of it with the major NYC bridges and tunnels connected by default. Now I know what some of you are thinking. What about the *SUBWAY*?! Rats *LOVE* the *SUBWAY*! Sorry, but it was tedious enough looking up all these bridges. A serious GIS specialist could probably do something fancy like overlay a shapefile of the NYC subway system on top of the ZIP code shapefile, and add connections that way. But for now we will just assume that rats are banned from riding the subway.
 
 ```{r}
 zips_adj_c <- zips_adj |> 
@@ -200,29 +200,38 @@ zips_adj_long <- rats_zip |>
 zip_mat <- nb2mat(zips_adj_long, style = "B") 
 ```
 
+We'll create an `nb` spatial neighbor object from this long data using `poly2nb()` as before, and add the tunnel and bridge connections using `connect_nyc_neighbor_zips()`.  We will then encode the neighbor relations in `zips_adj_long` as an adjacency matrix using `nb2mat()` with `style = "B"` for "binary". This creates a square matrix of 1's and 0's where the 1's denote adjacency between ZIP codes. 
 
 ```{r}
 rat_mod = inla(
   n_rats ~ total_populationE + buildings_before_1939E + n_kitchensE + n_food_workersE +
     f(zip_code_code, model = "bym", graph = zip_mat),
   data = rats_zip,
-  family = "poisson",
-  control.compute = list(dic = TRUE, waic = TRUE, cpo = TRUE, config = TRUE),
-  control.predictor = list(compute = TRUE)
+  family = "poisson"
 )
 ```
 
-```{r}
-rats_zip$mode = rat_mod$summary.fitted.values$mode
-cor(rats_zip$mode, rats_zip$n_rats)
 
+
+
+```{r}
+rats_zip$rat_score = rat_mod$summary.fitted.values$mode
+
+rats_zip <- rats_zip |> 
+  mutate(log_rat_score = log10(rat_score)) |> 
+  mutate(zip_rat_rank = as.integer(as.factor(log_rat_score)),
+         zip_rat_perc = percent_rank(zip_rat_rank))
+```
+
+
+```{r}
 rats_zip |> 
   st_as_sf() |> 
-  ggplot(aes(fill = log(mode))) +
+  ggplot(aes(fill = zip_rat_perc)) +
   geom_sf() + 
   scale_fill_viridis_c(option = "B", 
-                       labels = function(x) round(exp(x), 2),
-                       breaks = log(c(1, 10, 130))
+                       # labels = function(x) round(x^10, 2),
+                       # breaks = log(c(1, 10, 100))
                        ) +
   theme_void()
 ```
@@ -235,19 +244,19 @@ l <- st_as_sf(rats_zip) |>
 labels <- sprintf(
   "<strong> ZIP Code: %s </strong> <br/>
   Rat Index: %s",
-  rats_zip$zip_code, round(rats_zip$mode, 2)
+  rats_zip$zip_code, round(rats_zip$log_mode, 2)
 ) %>%
   lapply(htmltools::HTML)
 
 pal <- colorNumeric(
   palette = "plasma",
-  domain = log(rats_zip$mode)
+  domain = rats_zip$log_mode
   )
 
 l |> 
   addPolygons(
     smoothFactor = 0.2, fillOpacity = .5,
-    fillColor = ~pal(mode),
+    fillColor = ~pal(log_mode),
     weight = .1,
     highlightOptions = highlightOptions(weight = 4, color = "white"),
     label = labels,
@@ -260,7 +269,7 @@ l |>
     )
   ) |> 
   addLegend(
-    pal = pal, values = ~log(mode), opacity = 1,
+    pal = pal, values = ~log_mode, opacity = 1,
     title = "Rat Index", position = "bottomright"
   )
 ```
