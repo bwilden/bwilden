@@ -217,20 +217,20 @@ The `f(zip_code_code, model = "bym", graph = zip_mat)` section in the model is t
 
 We're using `family = "poisson"` in the model because the outcome variable, `n_rats`, is a count of rat inspections and Poisson likelihoods are good for count data.[^2]
 
-[^2]: Note: no rats were poissoned during the fitting of this model.
+[^2]: No rats were poissoned during the fitting of this model.
 
 ```{r}
-rats_zip$rat_score = rat_mod$summary.fitted.values$mode
-
 rats_zip <- rats_zip |> 
-  mutate(log_rat_score = log10(rat_score)) |> 
-  mutate(zip_rat_rank = as.integer(as.factor(log_rat_score)),
-         zip_rat_perc = percent_rank(zip_rat_rank))
+  mutate(rat_score = rat_mod$summary.fitted.values$mode,
+         log_rat_score = log10(rat_score),
+         zip_rat_rank = as.integer(as.factor(-log_rat_score)),
+         zip_rat_perc = percent_rank(-zip_rat_rank))
 ```
 
-
+The predicted rat activity can be extracted from the fitted model using `rat_mod$summary.fitted.values`. Mean, median, and mode of these posterior values are all about the same, so we'll save `$mode` as our new `rat_score` variable. Rat activity is highly skewed, so for plotting purposes we'll use `log_rat_score`. And we'll also create rat index rank and percentile variables so that we can find the biggest rat hot-spots in the city.
 
 ```{r}
+#| include: false
 rats_zip |> 
   st_as_sf() |> 
   ggplot(aes(fill = log_rat_score)) +
@@ -243,6 +243,7 @@ rats_zip |>
 ```
 
 ```{r}
+#| warning: false
 l <- st_as_sf(rats_zip) |> 
   leaflet() |> 
   addTiles()
@@ -251,20 +252,19 @@ labels <- sprintf(
   "<strong> ZIP Code: %s </strong> <br/>
   Rat Index: %s <br/> Percentile: %s",
   rats_zip$zip_code, 
-  round(rats_zip$log_rat_score, 2),
+  round(rats_zip$rat_score, 2),
   round(rats_zip$zip_rat_perc, 3)
-) %>%
+) |> 
   lapply(htmltools::HTML)
 
 pal <- colorNumeric(
   palette = "plasma",
-  domain = rats_zip$log_mode
-  )
+  domain = rats_zip$log_rat_score)
 
 l |> 
   addPolygons(
     smoothFactor = 0.2, fillOpacity = .5,
-    fillColor = ~pal(log_mode),
+    fillColor = ~pal(log_rat_score),
     weight = .1,
     highlightOptions = highlightOptions(weight = 4, color = "white"),
     label = labels,
@@ -277,7 +277,20 @@ l |>
     )
   ) |> 
   addLegend(
-    pal = pal, values = ~log_mode, opacity = 1,
-    title = "Rat Index", position = "bottomright"
-  )
+    pal = pal, values = ~log_rat_score, opacity = 1,
+    labFormat = labelFormat(transform = function(x) 10^x),
+    title = "Rat Index", position = "bottomright")
 ```
+
+Here are the rats! Using the **leaflet** package we have interactive map of rat activity across New York City. Mouse over any ZIP code to see the raw rat index score and its rat percentile.
+
+```{r}
+rats_zip |> 
+  arrange(zip_rat_rank) |> 
+  select(borough, zip_code, rat_score, zip_rat_rank) |> 
+  distinct() |> 
+  head(n = 10)
+```
+
+Taking a look at the top 10 rat index ZIP codes, the major rat activity is in a handful of neighborhoods in parts of Brooklyn and the Bronx. Rats appear to be less prevalent as you move out to Staten Island or Queens in the peripheral areas of the city. But keep in mind that the data in this project leaves a lot to be desired. To quote a friend with whom I was discussing this project: "the rats are *everywhere*, even if the rat inspections haven't been documented."
+
