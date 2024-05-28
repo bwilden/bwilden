@@ -205,14 +205,19 @@ We'll create an `nb` spatial neighbor object from this long data using `poly2nb(
 ```{r}
 rat_mod = inla(
   n_rats ~ total_populationE + buildings_before_1939E + n_kitchensE + n_food_workersE +
-    f(zip_code_code, model = "bym", graph = zip_mat),
+    f(zip_code_code, model = "bym2", graph = zip_mat),
   data = rats_zip,
   family = "poisson"
 )
 ```
 
+Time to build the rat model. We'll use the [**INLA**](https://www.r-inla.org/home) package to predict rat activity given the population, building age, kitchens, and food worker variables we assembled earlier. I am relatively new to using **INLA**, but it seems to be very popular for fitting Bayesian models with spatial components. It uses a form of approximate Bayesian inference called **I**tegrated **N**ested **L**aplace **A**pproximation, which means it runs a lot faster than full Markov Chain Monte Carlo samplers such as [Stan](https://mc-stan.org/). 
 
+The `f(zip_code_code, model = "bym", graph = zip_mat)` section in the model is the spatial component, aka the component that allows neighboring ZIP codes to share rat information with each other. **INLA** and all the spatial functions we used in **spdep** (`poly2nb()` and `nb2mat()`) are kind of old-school when it comes to their reliance on integer indexing---as opposed to allowing ZIP codes to be their true, un-ordered, selves. This is why I use the variable `zip_code_code` instead of `zip_code` here. It contains integer values matching each ZIP code with its position in the `nb` spatial neighbor object. The `model = "bym2"` part tells **INLA** we are doing spatial analyses using the [Besag-York-Mollié method](https://mc-stan.org/users/documentation/case-studies/icar_stan.html#bigger-data-from-56-counties-in-scotland-to-1921-census-tracts-in-new-york-city). BYM2 gives each ZIP code a varying intercept (i.e. "random effect") which is a combination of spatial correlation with its neighboring ZIP codes and an unstructured effect for non-spatial rat behavior.
 
+We're using `family = "poisson"` in the model because the outcome variable, `n_rats`, is a count of rat inspections and Poisson likelihoods are good for count data.[^2]
+
+[^2]: Note: no rats were poissoned during the fitting of this model.
 
 ```{r}
 rats_zip$rat_score = rat_mod$summary.fitted.values$mode
@@ -224,10 +229,11 @@ rats_zip <- rats_zip |>
 ```
 
 
+
 ```{r}
 rats_zip |> 
   st_as_sf() |> 
-  ggplot(aes(fill = zip_rat_perc)) +
+  ggplot(aes(fill = log_rat_score)) +
   geom_sf() + 
   scale_fill_viridis_c(option = "B", 
                        # labels = function(x) round(x^10, 2),
@@ -243,8 +249,10 @@ l <- st_as_sf(rats_zip) |>
 
 labels <- sprintf(
   "<strong> ZIP Code: %s </strong> <br/>
-  Rat Index: %s",
-  rats_zip$zip_code, round(rats_zip$log_mode, 2)
+  Rat Index: %s <br/> Percentile: %s",
+  rats_zip$zip_code, 
+  round(rats_zip$log_rat_score, 2),
+  round(rats_zip$zip_rat_perc, 3)
 ) %>%
   lapply(htmltools::HTML)
 
