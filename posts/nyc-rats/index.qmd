@@ -250,6 +250,8 @@ We're using `family = "poisson"` in the model because the outcome variable, `n_r
 
 [^2]: No rats were poissoned during the fitting of this model.
 
+# The Rat Index
+
 ```{r}
 rat_scores <- rats_all |> 
   mutate(rat_score = rat_mod$summary.fitted.values$mode) |> 
