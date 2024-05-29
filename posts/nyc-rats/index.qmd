@@ -16,8 +16,10 @@ Rats are "public enemy number one"---at least so says New York City Mayor Eric A
 #| warning: false
 # Packages used:
 library(dplyr)
+library(lubridate)
 library(tidyr)
 library(tidycensus)
+library(purrr)
 library(ggplot2)
 library(MetBrewer)
 library(spdep)
@@ -37,7 +39,8 @@ library(leaflet)
 The data I use to construct the **Rat Index** come from the [https://data.cityofnewyork.us/Health/Rodent-Inspection/p937-wjvj/about_data](NYC Rat Information Portal (RIP)).
 
 ```{r}
-rats <- readr::read_csv("https://data.cityofnewyork.us/resource/p937-wjvj.csv?$limit=2500000")
+rats <- readr::read_csv(here::here("posts", "nyc-rats", "data-raw", "Rodent_Inspection_20240528.csv")) |> 
+  janitor::clean_names()
 ```
 
 Each of the 2.5 million observations is a rodent inspection from the year 2010 to present. A lot of inspections don't find evidence of rats, so I focus on only the rows where `result == "Rat Activity"`. Mapping rat populations with this data is a bit problematic because there is probably some bias inherent in inspection rates. The RIP discusses this in their disclaimer:
@@ -47,44 +50,67 @@ Each of the 2.5 million observations is a rodent inspection from the year 2010 t
 I will attempt to deal with this bias by building a geospatial model of rat activity---rather than by simply using the raw data on its own. The idea here is that we can infer rat activity in areas with low inspection rates by how proximate they are to areas with high rat activity/inspection rates in the data. If there's one thing I know about rats it's that they love scurrying around from place to place.
 
 ```{r}
+data_years <- 2015:2021
+```
+
+
+```{r}
 rats_zip <- rats |> 
-  mutate(year = lubridate::year(inspection_date)) |> 
+  mutate(year = year(mdy_hms(inspection_date)),
+         # some ZIPs got put into the wrong boroughs
+         borough = case_when(zip_code == 10463 ~ "Bronx",
+                             zip_code == 10451 ~ "Bronx",
+                             zip_code == 11370 ~ "Queens",
+                             zip_code == 11207 ~ "Brooklyn",
+                             .default = borough)) |> 
   summarise(n_rats = sum(result == "Rat Activity", na.rm = TRUE),
-            .by = c("zip_code", "borough", "boro_code", "year")) |> 
-  # removing some invalid rows
-  filter(!is.na(borough), zip_code != "0", year %in% 2016:2021)
+            .by = c("zip_code", "borough", "year")) |> 
+  filter(year %in% data_years, !is.na(borough))
 ```
 
 Let's start by creating a new data frame, `rats_zip`, which collapses the number of rat activity observations (`n_rats`) down to the ZIP code-year level. I chose ZIP code as the level of spatial aggregation because most people know which ZIP code they live in (as opposed to Census tract or other designation). This will make it easier to know the **Rat Index** value where you live. The downside of using ZIP codes, however, is that they are constructed to facilitate mail delivery---not balanced geospatial analysis. In Manhattan, [https://convene.com/catalyst/office/buildings-new-york-city-own-zip-code/](42 *buildings*) have their own ZIP code. 
 
 ```{r}
 #| message: false
-nyc_zips <- get_acs(
-  geography = "zcta",
-  variables = c("n_kitchens" = "B25051_002",
-                "n_food_workers" = "C24050_040",
-                "buildings_before_1939" = "B25034_011",
-                "total_population" = "B01003_001"),
-  year = 2021,
-  survey = "acs5",
-  geometry = TRUE,
-  output = "wide",
-  progress = FALSE
-) |> 
-  mutate(zip_code = as.numeric(GEOID)) |> 
-  filter(zip_code %in% rats_zip$zip_code)
+get_rat_predictors <- function(year) {
+  zip_data <- get_acs(
+    geography = "zcta",
+    variables = c("n_kitchens" = "B25051_002",
+                  "n_food_workers" = "C24050_040",
+                  "buildings_before_1939" = "B25034_011",
+                  "total_population" = "B01003_001"),
+    year = year,
+    survey = "acs5",
+    output = "wide",
+    progress = FALSE
+  )
+  return(zip_data)
+}
+```
 
+
+```{r}
+nyc_rat_vars <- split(data_years, data_years) |> 
+  map(get_rat_predictors) |> 
+  list_rbind(names_to = "year") |> 
+  mutate(zip_code = as.numeric(GEOID),
+         year = as.numeric(year)) |> 
+  filter(zip_code %in% rats_zip$zip_code)
+```
+```{r}
+nyc_zips <- tigris::zctas(progress = FALSE) |> 
+  mutate(zip_code = as.numeric(ZCTA5CE20)) |> 
+  filter(zip_code %in% rats_zip$zip_code)
+```
+
+
+```{r}
 # Merge the ZIP data in with the rats data
-rats_zip <- rats_zip |> 
-  inner_join(nyc_zips, by = "zip_code") |> 
-         # some ZIPs got put in the wrong borough
-  mutate(borough = case_when(zip_code == 10463 ~ "Bronx",
-                             zip_code == 10451 ~ "Bronx",
-                             zip_code == 11370 ~ "Queens",
-                             zip_code == 11207 ~ "Brooklyn",
-                             .default = borough),
+rats_all <- rats_zip |> 
+  inner_join(nyc_rat_vars, by = c("zip_code", "year")) |> 
+  left_join(nyc_zips, by = "zip_code") |> 
          # model functions like data to be indexed as 1, 2, 3, etc
-         zip_code_code = as.integer(as.factor(zip_code)),
+  mutate(zip_code_code = as.integer(as.factor(zip_code)),
          year_code = as.integer(as.factor(year)))
 ```
 
@@ -96,7 +122,7 @@ In addition to the outcome variable, `n_rats`, and the Census covariates we will
 
 ```{r}
 # Using only zip codes, boroughs, and geometry to illustrate the neighbor graph
-zips_only <- rats_zip |> 
+zips_only <- rats_all |> 
   st_as_sf() |> 
   select(zip_code, borough) |> 
   distinct()
@@ -192,10 +218,10 @@ Plotting these two graphs on top of each other confirms that we fully connected 
 Speaking of the model, let's return to the ZIP-year level data, `rats_zip`, we created earlier. 
 
 ```{r}
-zips_adj_long <- rats_zip |> 
+zips_adj_long <- rats_all |> 
   st_as_sf() |> 
   poly2nb() |> 
-  connect_nyc_neighbor_zips(node_vec = rats_zip$zip_code)
+  connect_nyc_neighbor_zips(node_vec = rats_all$zip_code)
 
 zip_mat <- nb2mat(zips_adj_long, style = "B") 
 ```
@@ -206,7 +232,7 @@ We'll create an `nb` spatial neighbor object from this long data using `poly2nb(
 rat_mod = inla(
   n_rats ~ total_populationE + buildings_before_1939E + n_kitchensE + n_food_workersE +
     f(zip_code_code, model = "bym2", graph = zip_mat),
-  data = rats_zip,
+  data = rats_all,
   family = "poisson"
 )
 ```
@@ -220,7 +246,7 @@ We're using `family = "poisson"` in the model because the outcome variable, `n_r
 [^2]: No rats were poissoned during the fitting of this model.
 
 ```{r}
-rats_zip <- rats_zip |> 
+rat_scores <- rats_all |> 
   mutate(rat_score = rat_mod$summary.fitted.values$mode,
          log_rat_score = log10(rat_score),
          zip_rat_rank = as.integer(as.factor(-log_rat_score)),
@@ -231,7 +257,7 @@ The predicted rat activity can be extracted from the fitted model using `rat_mod
 
 ```{r}
 #| include: false
-rats_zip |> 
+rat_scores |> 
   st_as_sf() |> 
   ggplot(aes(fill = log_rat_score)) +
   geom_sf() + 
@@ -244,22 +270,22 @@ rats_zip |>
 
 ```{r}
 #| warning: false
-l <- st_as_sf(rats_zip) |> 
+l <- st_as_sf(rat_scores) |> 
   leaflet() |> 
   addTiles()
 
 labels <- sprintf(
   "<strong> ZIP Code: %s </strong> <br/>
   Rat Index: %s <br/> Percentile: %s",
-  rats_zip$zip_code, 
-  round(rats_zip$rat_score, 2),
-  round(rats_zip$zip_rat_perc, 3)
+  rat_scores$zip_code, 
+  round(rat_scores$rat_score, 2),
+  round(rat_scores$zip_rat_perc, 3)
 ) |> 
   lapply(htmltools::HTML)
 
 pal <- colorNumeric(
   palette = "plasma",
-  domain = rats_zip$log_rat_score)
+  domain = rat_scores$log_rat_score)
 
 l |> 
   addPolygons(
