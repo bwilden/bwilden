@@ -151,7 +151,7 @@
     "href": "blog.html",
     "title": "Blog",
     "section": "",
-    "text": "Mapping Airbnbs in San Diego\n\n\n\n\n\n\nGIS\n\n\nTutorial\n\n\n\n\n\n\n\n\n\nJul 31, 2023\n\n\nBertrand Wilden\n\n\n\n\n\n\n\n\n\n\n\n\nProbing the Depths of Probit Regression\n\n\n\n\n\n\nBayes\n\n\nbrms\n\n\nTutorial\n\n\n\n\n\n\n\n\n\nJun 21, 2023\n\n\nBertrand Wilden\n\n\n\n\n\n\n\n\n\n\n\n\nDoes Height Matter When Running for President?\n\n\n\n\n\n\nBayes\n\n\n\n\n\n\n\n\n\nAug 9, 2022\n\n\nBertrand Wilden\n\n\n\n\n\n\nNo matching items"
+    "text": "The NYC Rat Index\n\n\n\n\n\n\nBayes\n\n\nGIS\n\n\n\n\n\n\n\n\n\nMay 29, 2024\n\n\nBertrand Wilden\n\n\n\n\n\n\n\n\n\n\n\n\nMapping Airbnbs in San Diego\n\n\n\n\n\n\nGIS\n\n\nTutorial\n\n\n\n\n\n\n\n\n\nJul 31, 2023\n\n\nBertrand Wilden\n\n\n\n\n\n\n\n\n\n\n\n\nProbing the Depths of Probit Regression\n\n\n\n\n\n\nBayes\n\n\nbrms\n\n\nTutorial\n\n\n\n\n\n\n\n\n\nJun 21, 2023\n\n\nBertrand Wilden\n\n\n\n\n\n\n\n\n\n\n\n\nDoes Height Matter When Running for President?\n\n\n\n\n\n\nBayes\n\n\n\n\n\n\n\n\n\nAug 9, 2022\n\n\nBertrand Wilden\n\n\n\n\n\n\nNo matching items"
   },
   {
     "objectID": "index.html#quarto",
@@ -215,5 +215,19 @@
     "title": "Mapping Airbnbs in San Diego",
     "section": "Footnotes",
     "text": "Footnotes\n\n\nAs someone mentioned in my Reddit post, there are alternative ways to map the density of geo-spatial data—such as plotting the points directly on the map. The way I’m doing it here runs the risk of running into the Modifiable areal unit problem↩︎\nIn the version of the final map I posted to Reddit, I accidentally used the ACS variable for total households. This corresponds to sets of people living in each Census tract, rather than physical housing units. Total physical housing units will generally be more than total households because many units will be vacant at any given time. The two variables, however, appear to be roughly proportional to one another. So the map I originally posted was incorrect in terms of magnitude but shows a similar pattern of STRO density as the corrected map.↩︎\nAgain, Michael DeCrescenzo has a nice post on function compostion here: https://mikedecr.netlify.app/blog/composition/↩︎"
+  },
+  {
+    "objectID": "posts/nyc-rats/index.html",
+    "href": "posts/nyc-rats/index.html",
+    "title": "The NYC Rat Index",
+    "section": "",
+    "text": "Rats are “public enemy number one”—at least according to New York City Mayor Eric Adams. Last year the city established a “Rat Czar” who has been tasked with detecting and exterminating rat populations across the five boroughs. While I respect the lives all creatures great and small, mapping out the concentration of rats in the city seems like a worthwhile public service.\nIn this project I develop the NYC Rat Index using geospatial analysis in R. We will walk through some GIS wrangling steps and then employ Bayesian modeling to measure rat activity across New York. Use these results to figure out which neighborhoods to avoid—or which to seek out—depending on your overall disposition towards wild rodents.\n# Packages used:\nlibrary(dplyr)\nlibrary(lubridate)\nlibrary(tidyr)\nlibrary(tidycensus)\nlibrary(purrr)\nlibrary(ggplot2)\nlibrary(MetBrewer)\nlibrary(spdep)\nlibrary(sf)\nlibrary(INLA)\nlibrary(leaflet)"
+  },
+  {
+    "objectID": "posts/nyc-rats/index.html#footnotes",
+    "href": "posts/nyc-rats/index.html#footnotes",
+    "title": "The NYC Rat Index",
+    "section": "Footnotes",
+    "text": "Footnotes\n\n\nIn Manhattan, 42 buildings have their own ZIP code.↩︎\nNo rats were poissoned during the fitting of this model.↩︎"
   }
 ]

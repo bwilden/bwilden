@@ -9,6 +9,7 @@
   {
     "listing": "/blog.html",
     "items": [
+      "/posts/nyc-rats/index.html",
       "/posts/sd-stro/index.html",
       "/posts/probit-probit/index.html",
       "/posts/president-height/index.html"

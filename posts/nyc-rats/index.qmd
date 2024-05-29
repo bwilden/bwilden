@@ -1,10 +1,10 @@
 ---
 title: "The NYC Rat Index"
 author: "Bertrand Wilden"
-date: "2023-06-21"
+date: "2024-05-29"
 categories: [Bayes, GIS]
 max-description-length: 20
-draft: true
+draft: false
 execute: 
   message: false
   warning: false
@@ -12,7 +12,7 @@ execute:
 
 Rats are "public enemy number one"---at least according to New York City Mayor Eric Adams. Last year the city established a "[Rat Czar](https://www.nyc.gov/office-of-the-mayor/news/249-23/mayor-adams-anoints-kathleen-corradi-nyc-s-first-ever-rat-czar-#/0)" who has been tasked with detecting and exterminating rat populations across the five boroughs. While I respect the lives all creatures great and small, mapping out the concentration of rats in the city seems like a worthwhile public service.
 
-In this project I develop the **NYC Rat Index** using geospatial analysis in R. We will walk through some GIS wrangling steps and then employ Bayesian modeling to measure rat activity across New York. Use these results to figure out which neighborhoods to avoid---or which to seek out depending on your overall disposition towards wild rodents.
+In this project I develop the *NYC Rat Index* using geospatial analysis in R. We will walk through some GIS wrangling steps and then employ Bayesian modeling to measure rat activity across New York. Use these results to figure out which neighborhoods to avoid---or which to seek out---depending on your overall disposition towards wild rodents.
 
 ```{r}
 # Packages used:
@@ -44,11 +44,11 @@ rats <- readr::read_csv(here::here("posts", "nyc-rats", "data-raw", "Rodent_Insp
   janitor::clean_names()
 ```
 
-Each of the 2.5 million observations is a rodent inspection from the year 2010 to present. A lot of inspections don't find evidence of rats, so I focus on only the rows where `result == "Rat Activity"`. Mapping rat populations with this data is a bit problematic because rodent inspections are not random. The RIP discusses this in their disclaimer:
+Each of the 2.5 million observations is a rodent inspection from the year 2010 to present. A lot of inspections don't find evidence of rats, so we will focus only the rows where `result == "Rat Activity"`. Mapping rat populations with this data is a bit problematic because rodent inspections are not random. The RIP discusses this in their disclaimer:
 
 > Notes on data limitations: Please note that if a property/taxlot does not appear in the file, that does not indicate an absence of rats - rather just that it has not been inspected. Similarly, neighborhoods with higher numbers properties with active rat signs may not actually have higher rat populations but simply have more inspections.
 
-We can deal with some of this bias by building a geospatial model of rat activity---rather than by simply using the raw data on its own. The idea here is that we infer rat activity in areas with low inspection rates by how proximate they are to areas with high rat activity/inspection rates in the data. In other words, given the fact that rats love scurrying around from place to place, let's try to account for this spatial correlation statistically.
+We can deal with some of this bias by building a geospatial model of rat activity---rather than by simply using the raw data on its own. The idea here is that we infer rat activity in areas with low inspection rates by how proximate they are to areas with high rat activity/inspection rates in the data. Given the fact that rats love scurrying around from place to place, let's try to account for this spatial correlation statistically.
 
 ```{r}
 data_years <- 2015:2021
@@ -70,7 +70,7 @@ rats_zip <- rats |>
   filter(year %in% data_years, !is.na(borough))
 ```
 
-Let's start by creating a new data frame, `rats_zip`, which collapses the number of rat activity observations (`n_rats`) down to the ZIP code-year level. We'll use ZIP code as the level of spatial aggregation because most people know which ZIP code they live in (as opposed to Census tract or other designation). This will make it easier for New Yorkers to know the **Rat Index** value where they live. The downside of using ZIP codes, however, is that they are constructed to facilitate mail delivery---not balanced geospatial analysis.[^1]
+Let's start by creating a new data frame, `rats_zip`, which collapses the number of rat activity observations (`n_rats`) down to the ZIP code-year level. We'll use ZIP code as the level of spatial aggregation because most people know which ZIP code they live in (as opposed to Census tract or other designation). This will make it easier for New Yorkers to know the *Rat Index* value where they live. The downside of using ZIP codes, however, is that they are constructed to facilitate mail delivery---not balanced geospatial analysis.[^1]
 
 [^1]: In Manhattan, [42 *buildings*](https://convene.com/catalyst/office/buildings-new-york-city-own-zip-code/) have their own ZIP code.
 
@@ -91,7 +91,7 @@ get_rat_predictors <- function(year) {
 }
 ```
 
-We will grab ZIP code model covariates using the `get_acs()` function in the **tidycensus** R package. These are variables from the Census American Community Survey (ACS) which I believe can help predict rat activity. Because most of my knowledge about rat psychology comes from the movie Ratatouille, the number of kitchens and the number of food workers (e.g. chefs) seemed like they would be very important. The number of old buildings (built before 1939) in a ZIP code also seems relevant. I envision rats having an easier time scurrying around and infiltrating older buildings compared to new ones. And lastly we'll use the total population variable because apparently rats like living near us humans.
+Next, let's grab ZIP code covariates using the `get_acs()` function in the **tidycensus** R package. These are variables from the Census American Community Survey (ACS) which I believe can help predict rat activity in our model. Because most of my knowledge about rat psychology comes from the movie Ratatouille, the number of kitchens and the number of food workers (e.g. chefs) seem like they will be very important. The number of old buildings (built before 1939) in a ZIP code also seems relevant. I envision rats having an easier time infiltrating older buildings compared to new ones. And lastly we'll use the total population variable because apparently rats like living near us humans.
 
 ```{r}
 nyc_rat_vars <- split(data_years, data_years) |> 
@@ -110,7 +110,7 @@ nyc_zips <- tigris::zctas(progress = FALSE) |>
   filter(zip_code %in% rats_zip$zip_code)
 ```
 
-In addition to the outcome variable `n_rats`, and the Census covariates we will use to predict rat activity, we need the geospatial geometry of each ZIP code. Ideally we could get this information using the option `geometry = TRUE` in `get_acs()`. But I found that the ZIP code geometries had minuscule differences from year to year, which made any subsequent analysis with them a huge pain. So instead we will pull the spatial geometry data just once using the `zctas()` function in the **tigris** package.
+In addition to the outcome variable `n_rats`, and the Census covariates used to predict rat activity, we need the geospatial geometry of each ZIP code. Ideally we could get this information using the option `geometry = TRUE` in `get_acs()`. But I found that the ZIP code geometries had minuscule differences from year to year, which made any subsequent analysis with them a huge pain. So instead we will pull the spatial geometry data just once using the `zctas()` function in the **tigris** package.
 
 ```{r}
 # Merge the ZIP data in with the rats data
@@ -122,7 +122,7 @@ rats_all <- rats_zip |>
          year_code = as.integer(as.factor(year)))
 ```
 
-Lastly we merge all three data sources (rats, rat predictors, ZIP geometry) into a single data frame called `rats_all`.
+Lastly we merge all three data sources (rats, rat predictors, ZIP code geometry) into a single data frame called `rats_all`.
 
 # Geospatial Wrangling
 
@@ -139,7 +139,7 @@ zips_only <- rats_all |>
 zips_adj <- poly2nb(zips_only)
 ```
 
-The function `poly2nb()` from the **spdep** package takes our data with spatial geometry and returns a neighbor adjacency graph. This tells us, for each ZIP code in our data, which ZIP codes touch it at at least one point. We could take a look at this graph using the base `plot(zips_adj)` method, but I prefer the look and flexibility of ggplot.
+The function `poly2nb()` from the **spdep** package takes our data containing spatial geometry polygons and returns a neighbor adjacency graph. This tells us, for each ZIP code in our data, which ZIP codes touch it at at least one point. We could take a look at this network graph using the base `plot(zips_adj)` method, but I prefer the look and flexibility of ggplot.
 
 ```{r}
 nb_to_sf <- function(nb_obj, sf_obj) {
@@ -174,7 +174,7 @@ add_neighbors <- function(nb_obj, links, node_vec) {
 It turns out that adding manual connections to a `nb` spatial neighbors object is extremely annoying. The **spdep** package supposedly has a function for this: `edit.nb()`, but you will get an error saying "do not use in RStudio" (???). I refuse to work out of the Console like a caveman, so instead I wrote a function `add_neighbors()` to help with this. Enter your original `nb` spatial neighbors object, a vector of neighbor pairs you wish to connect, and the geography variable from the data frame you used to create the `nb` object---and you will get out a new `nb` spatial neighbors object with all those nodes connected. The `links` argument in this example will be ZIP code pairs and the `node_vec` argument will be the ZIP code column in `zips_only`, but `add_neighbors()` will also work if you want to connect Census tracts or any other geographic unit.
 
 ```{r}
-connect_nyc_neighbor_zips <- purrr::partial(
+connect_nyc_neighbor_zips <- partial(
   add_neighbors,
   links = c("11414" = "11693", # Cross Bay Blvd
             "11234" = "11697", # Marine Parkway Bridge
@@ -216,11 +216,11 @@ ggplot(zips_only) +
   theme_void()
 ```
 
-Plotting these two graphs on top of each other confirms that we fully connected the entire city! The rats are now free to roam from borough to borough in our model.
+Plotting these two graphs on top of each other confirms that we fully connected the entire city! The rats will now be free to roam from borough to borough in our model.
 
 # Modeling the Rats
 
-Let's return to the ZIP-year level data, `rats_all` for constructing the **Rat Index**.
+Let's return to the ZIP-year level data, `rats_all` for constructing the *Rat Index*.
 
 ```{r}
 zips_adj_long <- rats_all |> 
@@ -231,7 +231,7 @@ zips_adj_long <- rats_all |>
 zip_mat <- nb2mat(zips_adj_long, style = "B") 
 ```
 
-We'll create an `nb` spatial neighbor object from this long data using `poly2nb()` as before, and add the tunnel and bridge connections using `connect_nyc_neighbor_zips()`. We will then encode the neighbor relations in `zips_adj_long` as an adjacency matrix using `nb2mat()` with `style = "B"` for "binary". This creates a square matrix of 1's and 0's where the 1's denote adjacency between ZIP codes.
+We'll create an `nb` spatial neighbor object from this long data using `poly2nb()` as before, and add the tunnel and bridge connections using `connect_nyc_neighbor_zips()`. We will then encode the neighbor relations in `zips_adj_long` as an adjacency matrix using `nb2mat()` with `style = "B"` for "binary". This creates a square matrix of 1's and 0's where the 1's denote adjacency between ZIP codes. The adjacency matrix is how we encode neighbor relations in the modeling step.
 
 ```{r}
 rat_mod = inla(
@@ -242,9 +242,9 @@ rat_mod = inla(
 )
 ```
 
-Time to build the rat model. We'll use the [**INLA**](https://www.r-inla.org/home) package to predict rat activity given the population, building age, kitchens, and food worker variables we assembled earlier. **INLA** is very popular for fitting Bayesian models with spatial components. It uses a form of approximate Bayesian inference called **I**tegrated **N**ested **L**aplace **A**pproximation, which means it runs a lot faster than full Markov Chain Monte Carlo samplers such as [Stan](https://mc-stan.org/).
+Time to build the rat model. We'll use the [**INLA**](https://www.r-inla.org/home) package to predict rat activity given the population, building age, kitchens, and food worker variables we assembled earlier. **INLA** is very popular for fitting Bayesian models with spatial components. It uses a form of approximate Bayesian inference called *I*tegrated *N*ested *L*aplace *A*pproximation, which means it runs a lot faster than full Markov Chain Monte Carlo samplers such as [Stan](https://mc-stan.org/).
 
-The `f(zip_code_code, model = "bym", graph = zip_mat)` section in the model is the spatial component, aka the component that allows neighboring ZIP codes to share rat information with each other. **INLA** and all the spatial functions we used in **spdep** (`poly2nb()` and `nb2mat()`) are kind of old-school when it comes to their reliance on integer indexing---as opposed to allowing ZIP codes to be their true, un-ordered, selves. This is why I use the variable `zip_code_code` instead of `zip_code` here. It contains integer values matching each ZIP code with its position in the `nb` spatial neighbor object. The `model = "bym2"` part tells **INLA** we are doing spatial analyses using the [Besag-York-Mollié method](https://mc-stan.org/users/documentation/case-studies/icar_stan.html#bigger-data-from-56-counties-in-scotland-to-1921-census-tracts-in-new-york-city). BYM2 gives each ZIP code a varying intercept (i.e. "random effect") which is a combination of spatial correlation with its neighboring ZIP codes and an unstructured effect for non-spatial rat behavior.
+The `f(zip_code_code, model = "bym", graph = zip_mat)` section in the model is the spatial component. The part of the model that allows neighboring ZIP codes to share rat information with each other. **INLA** and all the spatial functions we used in **spdep** (`poly2nb()` and `nb2mat()`) are kind of old-school when it comes to their reliance on integer indexing---as opposed to allowing ZIP codes to be their true, un-ordered, selves. This is why I use the variable `zip_code_code` instead of `zip_code` here. It contains integer values matching each ZIP code with its position in the `nb` spatial neighbor object. The `model = "bym2"` part tells **INLA** we are doing spatial analyses using the [Besag-York-Mollié method](https://mc-stan.org/users/documentation/case-studies/icar_stan.html#bigger-data-from-56-counties-in-scotland-to-1921-census-tracts-in-new-york-city). BYM2 gives each ZIP code a varying intercept (i.e. "random effect") which is a combination of spatial correlation with its neighboring ZIP codes and an unstructured effect for non-spatial rat behavior.
 
 We're using `family = "poisson"` in the model because the outcome variable, `n_rats`, is a count of rat inspections and Poisson likelihoods are good for count data.[^2]
 
@@ -297,10 +297,10 @@ pal <- colorNumeric(
 
 l |> 
   addPolygons(
-    smoothFactor = 0.2, fillOpacity = .5,
+    smoothFactor = .1, fillOpacity = .8,
     fillColor = ~pal(log_rat_score),
     weight = .1,
-    highlightOptions = highlightOptions(weight = 4, color = "white"),
+    highlightOptions = highlightOptions(weight = 5, color = "white"),
     label = labels,
     labelOptions = labelOptions(
       style = list(
