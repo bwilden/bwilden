@@ -10,35 +10,6 @@ execute:
   warning: false
 ---
 
-## Introduction to IRT
-
-Item-Response Theory (IRT) models are a class of models used to measure latent traits in individuals.[^1] These are characteristics which we cannot observe directly, such as height or weight, but instead have to infer indirectly through observed actions. For example, a student's responses to questions on an exam might give us some idea about their latent ability---or a politician's votes in Congress might give us some idea about their underlying political ideology.
-
-[^1]: IRT can also be used on non-individual units, such as organizations, but most examples use individual people.
-
-Say we want to estimate how left-wing or right-wing a Supreme Court justice is. We will call this ideology variable $\theta$. One place is start would be to qualitatively code each Supreme Court decision as either being liberal or conservative, and then look at the proportion of times each justice sided with the conservative outcome. Expressed as a statistical model we get:
-
-$$
-\begin{aligned}
-y_{ij} \sim \text{Bernoulli}(\Phi(\theta_i))
-\end{aligned}
-$$ {#eq-0pl}
-
-Where whether each justice sides with a conservative decision ($y_{ij}$) is based probabilistically on the (scaled) proportion of conservative positions ($\theta_i$). The Standard Normal cumulative distribution function ($\Phi$) is there to add some random noise in the model. We don't want our ideology measurements to be deterministic based on past decisions. Instead, we want to allow some room for some idiosyncratic errors to occur. On even the most conservative possible decision, we allow for *some* probability that Clarence Thomas sides with the liberals.
-
-The model in @eq-0pl has at least one major flaw. Because there are only parameters for justices ($\theta_i$) and none for cases, it treats all cases before the Supreme Court as interchangeable. Additive indices such as these implicitly assume that each "item" (i.e. case) contributes the same amount of weight towards measuring the latent variable in question. In the example of the Supreme Court this is clearly a bad assumption to make since some cases clearly have more ideological importance than others.[^2]
-
-[^2]: The no-ideological-difference-among-items assumption is pretty much always wrong, yet researchers continue to use additive index scales of latent variables in the social sciences all time.
-
-$$
-\begin{aligned}
-y_{ij} \sim \text{Bernoulli}(\Phi(\theta_i + \xi_j))
-\end{aligned}
-$$ {#eq-1pl}
-
-Let's fix this flaw by adding a case parameter ($\xi_j$) to the model. @eq-1pl is commonly known as the "1-Parameter IRT Model". Each case 
-
-
 ```{r}
 library(dplyr)
 library(brms)
@@ -53,9 +24,66 @@ library(ggdist)
 }
 ```
 
+## A Conceptual Introduction to IRT
+
+Item-Response Theory (IRT) models are a class of models used to measure latent traits in individuals.[^1] These are characteristics which we cannot observe directly, such as height or weight, but instead have to infer indirectly through observed actions. For example, a student's responses to questions on an exam might give us some idea about their latent ability---or a politician's votes in Congress might give us some idea about their underlying political ideology.
+
+[^1]: IRT can also be used on non-individual units, such as organizations, but most examples use individual people.
+
+Say we want to estimate how left-wing or right-wing a Supreme Court justice is. We will call this ideology variable $\theta$. One place is start would be to qualitatively code each Supreme Court decision as either being liberal (0) or conservative (1), and then look at the proportion of times each justice sided with the conservative outcome. Expressed as a statistical model we get:
+
+$$
+\begin{aligned}
+y_{ij} \sim \text{Bernoulli}(\Phi(\theta_i))
+\end{aligned}
+$$ {#eq-0pl}
+
+Where whether each justice sides with a conservative decision ($y_{ij}$) is based probabilistically on the (scaled) proportion of conservative positions ($\theta_i$). The Standard Normal cumulative distribution function ($\Phi$) is there to add some random noise in the model. We don't want our ideology measurements to be deterministic based on past decisions. Instead, we want to allow some room for some idiosyncratic errors to occur. On even the most conservative possible decision, we allow for *some tiny* probability that Clarence Thomas sides with the liberals. The Bernoulli distribution turns the probabilities produced by the $\Phi$ function into observed 0's and 1's (liberal or conservative votes). See my [post on Probit regression models](https://www.bwilden.com/posts/probit-probit/) for more on this.
+
+The model in @eq-0pl has at least one major flaw. Because there are only parameters for justices ($\theta_i$) and none for cases, it treats all cases before the Supreme Court as interchangeable. Additive indices such as these implicitly assume that each "item" (i.e. case) contributes the same amount of weight towards measuring the latent variable in question. In the example of the Supreme Court this is clearly a bad assumption to make since some cases clearly have more ideological importance than others.[^2]
+
+[^2]: The no-ideological-difference-among-items assumption is pretty much always wrong, yet researchers continue to use additive index scales of latent variables in the social sciences all time. Do better! It's not that hard!
+
+$$
+\begin{aligned}
+y_{ij} \sim \text{Bernoulli}(\Phi(\theta_i + \xi_j))
+\end{aligned}
+$$ {#eq-1pl}
+
+Let's fix this flaw by adding a case-level parameter ($\xi_j$) to the model. @eq-1pl is commonly known as the *1-Parameter IRT Model*.[^3] Each case now has an independent latent variable for how likely *every* justice is to vote in the conservative direction. In IRT models within the context of standardized tests, $\xi$ is called the "difficulty" parameter---questions on exams vary in how difficult they are to answer correctly.
+
+[^3]: Which is confusing because there are two parameters in the model: $\theta$ and $\xi$. Note that $\theta$ in @eq-1pl is not formulated exactly the same as the additive index $\theta$ in @eq-0pl. In @eq-1pl $\theta$ is simply an arbitrary parameter for the latent variable as opposed to the scaled proportion of conservative votes as in @eq-0pl. We can, however, still interpret larger values of $\theta$ as more conservative and lower values of $\theta$ as more liberal.
+
+$$
+\begin{aligned}
+y_{ij} \sim \text{Bernoulli}(\Phi(\gamma_j\theta_i + \xi_j))
+\end{aligned}
+$$ {#eq-2pl}
+
+The 1-Parameter IRT model in @eq-1pl is a big improvement over the additive index model in @eq-0pl, but if we want to be serious about measuring Supreme Court justice ideology we need to go further. The *2-Parameter IRT model* in @eq-2pl adds one more case-level parameter ($\gamma$) which allows the *ideological valence* of each case to vary. In the test-taking context, $\gamma$ is referred to as the "discrimination" parameter. What this means in the context of the Supreme Court is that we expect certain cases to more strongly separate liberal justices from conservative justices.[^4]
+
+[^4]: A note on notation: in the dozens of books/articles I've read on IRT modeling, I have not found even two which share the same Greek letters for the ability, difficulty, and discrimination parameters. Sometimes $\alpha$ is in place of $\theta$. Sometimes $\beta$ is in place of $\xi$. The $\gamma$ parameter can be any number of letters. I have decided to contribute to this ongoing mess and confusion by using my own $(\gamma_j\theta_i + \xi_j)$, whose exact permutation I have not seen anywhere else. 
+
+
+## Step-by-Step IRT Modeling in brms
+
+Now let's turn to coding up the IRT model in @eq-2pl, and using it to measure the ideology of Supreme Court justices. There are three steps to this process:
+
+1. Prepare the data
+2. Build the model
+3. Extract the ideology estimates
+
+### Step 1: Prepare the data
+
+The Washington University Law [Supreme Court Database](http://scdb.wustl.edu/data.php) is a fantastic resource for data on Supreme Court cases. We will be using the justice centered data because ultimately it is justice characteristics we care about.
+
 ```{r}
 votes <- readr::read_csv(here::here("posts", "irt-brms", "data-raw", "SCDB_2023_01_justiceCentered_Vote.csv"))
 ```
+
+The `votes` data frame contains justice voting data stretching back to 1946. It is already in "long format", which is great because that's what works best with our modeling approach using the [brms R package](https://paul-buerkner.github.io/brms/). By long format we mean that every row contains a unique justice-case pair.[^5]
+
+[^5]: Long data is in contrast to "wide" data in a vote matrix---where the rows are justices and the columns are cases. Older IRT estimation packages, such as [pscl](https://github.com/atahk/pscl), prefer data in the form a vote matrix.
 
 ```{r}
 votes_recent <- votes |> 
@@ -64,6 +92,10 @@ votes_recent <- votes |>
                                direction == 1 ~ 2,
                                .default = NA))
 ```
+
+Next we will filter out all years except for the 2022 term because this is where the 6-3 vs 3-3-3 debate is taking place. Lastly, we will recode the outcome variable, `direction`, such that `2` represents the conservative position and `1` represents the liberal position. This helps align liberal with "left-wing" and conservative with "right-wing" on the ideology scale we are building. The method behind coding a decision as liberal versus conservative is explained in more detail [here](http://scdb.wustl.edu/documentation.php?var=decisionDirection).
+
+### Step 2: Build the model
 
 ```{r}
 irt_formula <- bf(
@@ -113,14 +145,11 @@ summary(irt_fit)
 ```
 
 
-```{r}
-#| eval: false
-get_variables(irt_fit)
-```
+
 
 
 ```{r}
-justice_draw <- irt_fit |> 
+justice_draws <- irt_fit |> 
   spread_draws(r_justiceName__theta[justice,]) |> 
   ungroup() |> 
   mutate(justice = case_when(justice == "SAAlito" ~ "Alito",
@@ -136,9 +165,13 @@ justice_draw <- irt_fit |>
          justice = forcats::fct_reorder(justice, theta))
 ```
 
+```{r}
+#| eval: false
+get_variables(irt_fit)
+```
 
 ```{r}
-justice_draw |> 
+justice_draws |> 
   ggplot(aes(x = theta, 
              y = justice)) +
   stat_slabinterval(aes(fill_ramp = after_stat(x)),
