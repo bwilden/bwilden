@@ -1,0 +1,108 @@
+---
+title: "Supreme Court"
+author: "Bertrand Wilden"
+date: "2024-05-29"
+categories: [Bayes]
+max-description-length: 20
+draft: true
+execute: 
+  message: false
+  warning: false
+---
+
+```{r}
+library(dplyr)
+library(brms)
+library(tidybayes)
+library(ggplot2)
+library(ggdist)
+```
+
+
+```{r}
+votes <- readr::read_csv(here::here("posts", "sc-ideal", "data-raw", "SCDB_2023_01_justiceCentered_Vote.csv"))
+```
+
+```{r}
+votes_recent <- votes |> 
+  filter(term %in% c(2022)) |> 
+  mutate(direction = case_when(direction == 2 ~ 1,
+                               direction == 1 ~ 2,
+                               .default = NA))
+```
+
+```{r}
+irt_formula <- bf(
+  direction ~ gamma * theta + beta,
+  theta ~ (1 | justiceName),
+  gamma ~ (1 | caseId),
+  beta ~ (1 | caseId),
+  nl = TRUE
+)
+
+irt_priors <- 
+  prior(normal(0, 2), class = b, nlpar = beta) +
+  prior(normal(0, 2), class = b, nlpar = gamma, lb = 0) +
+  prior(normal(0, 2), class = b, nlpar = theta) 
+  
+```
+
+
+```{r}
+get_prior(irt_formula, data = votes_recent, family = cumulative(link = "probit"))
+```
+
+
+```{r}
+fit <- brm(
+  formula = irt_formula,
+  prior = irt_priors,
+  data = votes_recent,
+  family = bernoulli(link = "probit"),
+  backend = "cmdstanr",
+  cores = 8,
+  threads = threading(2),
+  control = list(adapt_delta = 0.99,
+                 max_treedepth = 15),
+  seed = 111
+)
+summary(fit)
+```
+
+
+```{r}
+fit |> 
+  spread_draws(r_justiceName__theta[justice,]) |> 
+  ungroup() |> 
+  mutate(
+    # justice = case_when(justice == "SAAlito" ~ "Alito",
+    #                          justice == "CThomas" ~ "Thomas",
+    #                          justice == "NMGorsuch" ~ "Gorsuch",
+    #                          justice == "ACBarrett" ~ "Barrett",
+    #                          justice == "JGRoberts" ~ "Roberts",
+    #                          justice == "BMKavanaugh" ~ "Kavanaugh",
+    #                          justice == "KBJackson" ~ "Jackson",
+    #                          justice == "EKagan" ~ "Kagan",
+    #                          justice == "SSotomayor" ~ "Sotomayor"),
+         theta = r_justiceName__theta,
+         justice = forcats::fct_reorder(justice, theta)) |> 
+  ggplot(aes(x = theta, 
+             y = justice)) +
+  stat_slabinterval(aes(fill_ramp = after_stat(x)),
+                    fill = "green",
+                    alpha = .75) +
+  scale_fill_ramp_continuous(from = "blue", guide = guide_rampbar(to = "green")) +
+  xlim(c(-3.5, 3.5)) +
+  labs(x = "Ideology", y = "", title = "2022 Term") +
+  theme_minimal()
+
+# ggsave("judge_ideolog.png", bg = "white")
+```
+
+```{r}
+tibble(d = dist_uniform(0, 1)) %>%
+  ggplot(aes(y = 0, xdist = d)) +
+  stat_slab(aes(fill_ramp = after_stat(x)), fill = "blue") +
+  scale_fill_ramp_continuous(from = "red")
+```
+
