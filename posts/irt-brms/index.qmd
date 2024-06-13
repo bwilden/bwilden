@@ -93,9 +93,13 @@ votes_recent <- votes |>
                                .default = NA))
 ```
 
-Next we will filter out all years except for the 2022 term because this is where the 6-3 vs 3-3-3 debate is taking place. Lastly, we will recode the outcome variable, `direction`, such that `2` represents the conservative position and `1` represents the liberal position. This helps align liberal with "left-wing" and conservative with "right-wing" on the ideology scale we are building. The method behind coding a decision as liberal versus conservative is explained in more detail [here](http://scdb.wustl.edu/documentation.php?var=decisionDirection).
+Next we will filter out all years except for the 2022 term because this is where the 6-3 vs 3-3-3 debate is taking place. And lastly we will recode the outcome variable, `direction`, such that `2` represents the conservative position and `1` represents the liberal position. This helps align liberal with "left-wing" and conservative with "right-wing" on the ideology scale we are building. The method behind coding a decision as liberal versus conservative is explained in more detail [here](http://scdb.wustl.edu/documentation.php?var=decisionDirection).
 
 ### Step 2: Build the model
+
+With our data ready to go it is time to translate the model from @eq-2pl into R code. The [brms R package](https://paul-buerkner.github.io/brms/) makes constructing the model, as well as extracting the results, relatively straightforward.[^6]
+
+[^6]: See [Bürkner 2020](https://arxiv.org/pdf/1905.09501) for a comprehensive introduction in IRT modeling using brms.
 
 ```{r}
 irt_formula <- bf(
@@ -105,13 +109,20 @@ irt_formula <- bf(
   xi ~ (1 | caseId),
   nl = TRUE
 )
+```
 
+We start with writing out the formula for our ideology model, `irt_formula`. The top line `direction ~ gamma * theta + xi` is @eq-2pl with the `direction` variable---whether a justice took a conservative or liberal position on a case---swapped in for $y_{ij}$. Each of `gamma`, `theta`, and `xi` are modeling hierarchically using either the case variable `caseID` or justice variable `justiceName`. Hierarchical modeling allows each of these three parameters to partially pool information from other cases or justices, which imposes regularization on the estimates and improves out-of-sample fit. This should be the default practice whenever building an IRT model. Lastly, the line `nl = TRUE` is necessary because the term `gamma * theta` means that the model is "non-linear".
+
+Priors are important in all Bayesian models, but they are especially important for IRT due to these models' inherently tricky identification problems. A model is "properly identified" if, given a specific set of data, the model will produce a unique set of plausible parameter values. As it currently stands this is not the case for @eq-2pl or `irt_formula`. Identification is difficult for IRT models because there is no inherent center, scale, or polarity for latent variables. It might be natural to think of 0 as the center for ideology, but nothing in @eq-2pl makes that so. Likewise, there is no one way of telling how stretched out or compressed the ideology scale should be. And finally, there is nothing to tell us whether increasing values should correspond to ideology becoming more liberal or more conservative (polarity). 
+
+```{r}
 irt_priors <- 
   prior(normal(0, 2), class = b, nlpar = gamma, lb = 0) +
   prior(normal(0, 2), class = b, nlpar = theta) +
   prior(normal(0, 2), class = b, nlpar = xi)
 ```
 
+We will solve each of these three identification problems by setting a few priors on the parameters. Each of the three parameters, `gamma`, `theta`, and `xi` will get relatively narrow Normal(0, 2) priors. These encode a default center and scale into the model. Lastly we set `lb = 0` on `gamma` which means that its lower-bound cannot be less than zero, and therefore `gamma` must be positive for all cases. This, in conjunction with defining the `direction` variable such that higher values = conservative and lower values = liberal, fixes the polarity identification problem.
 
 ```{r}
 #| eval: false
@@ -122,6 +133,7 @@ get_prior(
 )
 ```
 
+For help setting priors in brms you can use the `get_prior()` function with your formula, data, and model family. It will tell you what the default priors are for this model. To solve the identification problems in `irt_formula` we only need to set priors on the `class = b` intercepts, but if you wanted to get a little more fancy you could add custom priors to the `class = sd` scale parameters (the default Student t(3, 0, 2.5) seems fine to me).
 
 ```{r}
 irt_fit <- brm(
@@ -135,18 +147,35 @@ irt_fit <- brm(
   control = list(adapt_delta = 0.99,
                  max_treedepth = 15),
   refresh = 0,
-  seed = 111
+  seed = 555
 )
 ```
 
+Let's finally add our IRT formula, priors, and data into the `brm()` function and fit the IRT model. The `brm()` function takes these inputs and translate them in [Stan](https://mc-stan.org/) code which is run using `backend = "cmdstanr"`.[^7] The default four chains will sample in parallel if you set `cores = 4` or greater. Combining `cores = 8` with `threads = threading(2)` allows two of your cores to work on each chain, which can help speed up the sampling. The `adapt_delta = 0.99` and `max_treedepth = 15` options give the sampler a bit more *oomph*, to use a technical term. This will help make sure things don't run off the rails due to identification issues during sampling---which can still creep up in IRT models despite our best efforts in setting priors. 
+
+[^7]: [CmdStanR](https://mc-stan.org/cmdstanr/articles/cmdstanr.html) is not the default backend for brms, but I prefer it to [RStan](https://github.com/stan-dev/rstan/wiki/RStan-Getting-Started) because the output is more concise and it seems to sample faster. 
 
 ```{r}
 summary(irt_fit)
 ```
 
+Inspecting the output in `summary(irt_fit)` won't tell us much about the substantive results, but it is crucial for ensuring that the model has fit properly. If your IRT model is poorly identified, Stan's Hamiltonian Monte Carlo (HMC) sampler will likely scream at you about a number of things. 
+
+1. If you get more than a handful of divergent transition warnings, there is likely something seriously wrong with the model.
+2. Check for high Rhat values for some or all parameters. Rhats above ~1.02 signify that the four HMC chains do not share a lot of agreement on where the posterior distribution should be. Typically this comes from poor identification---for example if polarity is not fixed, the *same data* will produce negative values for some chains and positive values for other chains. 
+3. Make sure the Effective Sample Size numbers (Bulk_ESS and Tail_ESS) are sufficiently large (ideally several 100's) for all parameters.
 
 
+### Step 3. Extract the ideology estimates
 
+After fitting the model and checking the sampling diagnostics we are finally ready to extract the ideology estimates (posterior distributions for `theta`) for each justice. This can be done directly in brms, but I prefer to use the [tidybayes R package](https://mjskay.github.io/tidybayes/) because it is specifically built for working with post-estimation quantities from Bayesian models. 
+
+```{r}
+#| eval: false
+get_variables(irt_fit)
+```
+
+We start by identifying the names of the parameters we're interested in using `get_variables()`. In this case they are `r_justiceName__theta`.
 
 ```{r}
 justice_draws <- irt_fit |> 
@@ -165,10 +194,7 @@ justice_draws <- irt_fit |>
          justice = forcats::fct_reorder(justice, theta))
 ```
 
-```{r}
-#| eval: false
-get_variables(irt_fit)
-```
+Draws from the posterior distribution for each justice's `r_justiceName__theta` can be extracted using tidybayes's `spread_draws()` function. The `[justice,]` part gives us draws for each justice and names the new variable distinguishing justices `justice`. In this code chunk we also rename the justices to use just their last name, and we reorder them by their median `theta` value using `forcats::fct_reorder()`.
 
 ```{r}
 justice_draws |> 
@@ -178,12 +204,18 @@ justice_draws |>
                     fill = "green",
                     density = "unbounded",
                     alpha = .75) +
-  scale_fill_ramp_continuous(from = "blue") +
+  scale_fill_ramp_continuous(from = "blue", guide = "none") +
   xlim(c(-3.5, 3.5)) +
   labs(x = "Ideology", y = "", title = "2022 Term") +
   theme_minimal()
-
-# ggsave("judge_ideolog.png", bg = "white")
 ```
 
+The [ggdist R package](https://mjskay.github.io/ggdist/) contains many excellent options for graphing distributions of values and plays very nicely with tidybayes (Matthew Kay is author of both packages). In this case we'll use `slab_interval()` to show us the full posterior distribution for `theta`, along with median and 66% + 95% intervals.
 
+## Interpreting IRT Model Results
+
+What should we take away from the ideology estimates from the model above? First, the ordering roughly matches intuition. We have the three liberal, Democrat-appointed, justices Sotomayor, Kagan, and Jackson receiving left-wing ideology scores. Kavanaugh and Roberts are considerably more right-wing than those three, followed by Barrett and Gorsuch. And Thomas and Alito are even more extreme in their conservatism compared to their four Republican-appointed colleagues. 
+
+A second takeaway is that these estimates contain a lot of uncertainty. The `theta` posteriors for each justice are quite wide, especially for those on the ideological periphery. This in large part due to a lack of data. We are only examining a single year of Supreme Court cases (55 total in the model), and we only have nine individuals who are taking positions on these cases. In principle we could extend this analysis back further in time by using data on more Supreme Court terms. However, this is not necessarily a good idea and leads us into the third takeaway.
+
+Do not conclude that an ideology score of 0 on this scale is "centrist" or "moderate" in a broader political context! Supreme Court cases are *not* a representative sample of the political issues facing the United States each year.
