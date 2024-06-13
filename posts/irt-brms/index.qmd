@@ -1,7 +1,7 @@
 ---
 title: "Practical Bayesian IRT Modeling in R"
 author: "Bertrand Wilden"
-date: "2024-05-29"
+date: "2024-06-13"
 categories: [Bayes, Tutorial, brms]
 max-description-length: 20
 number-sections: true
@@ -14,7 +14,7 @@ execute:
   warning: false
 ---
 
-I have spent a good chunk of my 5-year Political Science PhD attempting to estimate the ideology of various [groups](https://github.com/bwilden/abstention-ideal) and [individuals](https://github.com/bwilden/irt-mrp-bym). During this time I developed a workflow for building the types of statistical models that purport to accomplish this, and I wanted to share some of what I have learned in this blog post. I was also recently inspired to do some ideology estimation in the context of the US Supreme Court after hearing about the debate between the [3-3-3 Court](https://www.politico.com/news/magazine/2024/06/02/supreme-court-justice-math-00152188) and the [6-3 Court](https://ballsandstrikes.org/law-politics/3-3-3-court-no-cmon-not-this-again/). 
+I spent a good chunk of my 5-year Political Science PhD attempting to estimate the ideology of various [groups](https://github.com/bwilden/abstention-ideal) and [individuals](https://github.com/bwilden/irt-mrp-bym). During this time I developed a workflow for constructing the types of statistical models that purport to accomplish this, and I wanted to share some of what I have learned in this blog post. I was also recently inspired to do some ideology estimation in the context of the US Supreme Court after hearing about the debate between the [3-3-3 Court](https://www.politico.com/news/magazine/2024/06/02/supreme-court-justice-math-00152188) and the [6-3 Court](https://ballsandstrikes.org/law-politics/3-3-3-court-no-cmon-not-this-again/). 
 
 - @sec-intro provides a conceptual overview of IRT ideology models.
 - If you want to skip all the Greek letters and math notation, go to @sec-tutorial for the coding workflow in R.
