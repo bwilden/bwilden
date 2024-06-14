@@ -234,6 +234,7 @@ window.Quarto = {
 
 
 <p>I spent a good chunk of my 5-year Political Science PhD attempting to estimate the ideology of various <a href="https://github.com/bwilden/abstention-ideal">groups</a> and <a href="https://github.com/bwilden/irt-mrp-bym">individuals</a>. During this time I developed a workflow for constructing the types of statistical models that purport to accomplish this, and I wanted to share some of what I have learned in this blog post. I was also recently inspired to do some ideology estimation in the context of the US Supreme Court after hearing about the debate between the <a href="https://www.politico.com/news/magazine/2024/06/02/supreme-court-justice-math-00152188">3-3-3 Court</a> and the <a href="https://ballsandstrikes.org/law-politics/3-3-3-court-no-cmon-not-this-again/">6-3 Court</a>.</p>
+<p>This post is organized as follows:</p>
 <ul>
 <li><a href="#sec-intro" class="quarto-xref">Section&nbsp;1</a> provides a conceptual overview of IRT ideology models.</li>
 <li>If you want to skip all the Greek letters and math notation, go to <a href="#sec-tutorial" class="quarto-xref">Section&nbsp;2</a> for the coding workflow in R.</li>
@@ -280,13 +281,7 @@ y_{ij} \sim \text{Bernoulli}(\Phi(\gamma_j\theta_i + \xi_j))
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(brms)</span>
 <span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidybayes)</span>
 <span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(ggplot2)</span>
-<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(ggdist)</span>
-<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="co"># This option makes the color ramps smooth when graphing slabs</span></span>
-<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>knitr<span class="sc">::</span>opts_chunk<span class="sc">$</span><span class="fu">set</span>(</span>
-<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>  <span class="at">dev =</span> <span class="st">"png"</span>, </span>
-<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>  <span class="at">dev.args =</span> <span class="fu">list</span>(<span class="at">type =</span> <span class="st">"cairo"</span>)</span>
-<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(ggdist)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <div class="cell">
 <style type="text/css">
@@ -357,14 +352,14 @@ y_{ij} \sim \text{Bernoulli}(\Phi(\gamma_j\theta_i + \xi_j))
 <div class="cell-output cell-output-stdout">
 <pre><code>Running MCMC with 4 chains, at most 8 in parallel, with 2 thread(s) per chain...
 
-Chain 2 finished in 42.9 seconds.
-Chain 1 finished in 43.8 seconds.
-Chain 3 finished in 44.6 seconds.
-Chain 4 finished in 46.2 seconds.
+Chain 1 finished in 31.0 seconds.
+Chain 2 finished in 34.7 seconds.
+Chain 3 finished in 35.6 seconds.
+Chain 4 finished in 37.5 seconds.
 
 All 4 chains finished successfully.
-Mean chain execution time: 44.4 seconds.
-Total execution time: 46.3 seconds.</code></pre>
+Mean chain execution time: 34.7 seconds.
+Total execution time: 37.6 seconds.</code></pre>
 </div>
 </div>
 <p>Let’s finally add our IRT formula, priors, and data into the <code>brm()</code> function and fit the IRT model. The <code>brm()</code> function takes these inputs and translate them in <a href="https://mc-stan.org/">Stan</a> code which is run using <code>backend = "cmdstanr"</code>.<a href="#fn7" class="footnote-ref" id="fnref7" role="doc-noteref"><sup>7</sup></a> The default four chains will sample in parallel if you set <code>cores = 4</code> or greater. Combining <code>cores = 8</code> with <code>threads = threading(2)</code> allows two of your cores to work on each chain, which can help speed up the sampling. The <code>adapt_delta = 0.99</code> and <code>max_treedepth = 15</code> options give the sampler a bit more <em>oomph</em>, to use a technical term. This will help make sure things don’t run off the rails due to identification issues during sampling—which can still creep up in IRT models despite our best efforts in setting priors.</p>
@@ -384,18 +379,18 @@ Formula: direction ~ gamma * theta + xi
 Multilevel Hyperparameters:
 ~caseId (Number of levels: 55) 
                     Estimate Est.Error l-95% CI u-95% CI Rhat Bulk_ESS Tail_ESS
-sd(gamma_Intercept)     1.69      1.11     0.37     4.42 1.01      524     1914
-sd(xi_Intercept)        2.76      0.68     1.57     4.26 1.01      538     1307
+sd(gamma_Intercept)     1.59      1.04     0.32     4.22 1.00      733     1499
+sd(xi_Intercept)        2.83      0.68     1.62     4.28 1.01      497     1181
 
 ~justiceName (Number of levels: 9) 
                     Estimate Est.Error l-95% CI u-95% CI Rhat Bulk_ESS Tail_ESS
-sd(theta_Intercept)     1.44      1.00     0.34     4.19 1.00     1588     2577
+sd(theta_Intercept)     1.50      1.07     0.37     4.39 1.00     1494     1882
 
 Regression Coefficients:
                 Estimate Est.Error l-95% CI u-95% CI Rhat Bulk_ESS Tail_ESS
-gamma_Intercept     1.10      0.70     0.23     2.87 1.00     1583     2166
-theta_Intercept    -1.12      0.99    -3.32     0.75 1.02      377      570
-xi_Intercept        0.97      0.73    -0.60     2.33 1.02      240      560
+gamma_Intercept     1.06      0.66     0.21     2.73 1.00     1283     1388
+theta_Intercept    -1.02      1.06    -3.29     1.06 1.01      317      622
+xi_Intercept        0.86      0.75    -0.74     2.19 1.01      269      618
 
 Draws were sampled using sample(hmc). For each parameter, Bulk_ESS
 and Tail_ESS are effective sample size measures, and Rhat is the potential
@@ -454,7 +449,7 @@ scale reduction factor on split chains (at convergence, Rhat = 1).</code></pre>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="index_files/figure-html/unnamed-chunk-13-1.png" class="img-fluid figure-img" width="672"></p>
+<p><img src="index_files/figure-html/unnamed-chunk-14-1.png" class="img-fluid figure-img" width="672"></p>
 </figure>
 </div>
 </div>
