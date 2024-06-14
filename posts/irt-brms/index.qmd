@@ -30,7 +30,7 @@ This post is organized as follows:
 
 - @sec-intro provides a conceptual overview of IRT ideology models.
 - If you want to skip all the Greek letters and math notation, go to @sec-tutorial for the coding workflow in R.
-- And if you only want to read the interpretation of the model results through my uninformed and half-baked analysis of the Supreme Court skip to @sec-results.
+- And if you only want to read the interpretation of the model results through my uninformed and half-baked analysis of the Supreme Court, skip to @sec-results.
 
 
 ## A Conceptual Introduction to IRT {#sec-intro}
