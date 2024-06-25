@@ -1,0 +1,31 @@
+---
+title: "Practical Bayesian IRT Modeling in R"
+author: "Bertrand Wilden"
+date: "2024-06-13"
+categories: [Bayes, Tutorial, brms]
+max-description-length: 20
+number-sections: true
+draft: true
+output:
+  html_document:
+    dev: ragg_png
+execute: 
+  message: false
+  warning: false
+---
+
+
+```{r}
+library(dplyr)
+library(ggplot2)
+```
+
+```{r}
+stops = readr::read_csv(here::here("posts", "sdpd-stops", "data-raw", "ripa_stop_reason_datasd.csv"))
+```
+```{r}
+stops |> 
+  count(reason_for_stop_explanation) |> 
+  View()
+```
+

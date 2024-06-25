@@ -4,12 +4,14 @@ project:
 website:
   title: "Bertrand Wilden"
   site-url: https://www.bwilden.com
-  description: "Bertrand Wilden's Personal Website"
+  description: "Bertrand Wilden's Blog"
   navbar:
     right:
       - blog.qmd
       - icon: github
         href: https://github.com/bwilden
+      - icon: rss
+        href: index.xml
 format:
   html:
     theme: lux

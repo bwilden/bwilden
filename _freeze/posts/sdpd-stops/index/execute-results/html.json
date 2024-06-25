@@ -1,0 +1,15 @@
+{
+  "hash": "8d1cc276cb39072015effd9503b9ef91",
+  "result": {
+    "engine": "knitr",
+    "markdown": "---\ntitle: \"Practical Bayesian IRT Modeling in R\"\nauthor: \"Bertrand Wilden\"\ndate: \"2024-06-13\"\ncategories: [Bayes, Tutorial, brms]\nmax-description-length: 20\nnumber-sections: true\ndraft: true\noutput:\n  html_document:\n    dev: ragg_png\nexecute: \n  message: false\n  warning: false\n---\n\n::: {.cell}\n\n```{.r .cell-code}\nlibrary(dplyr)\nlibrary(ggplot2)\n```\n:::\n\n::: {.cell}\n\n```{.r .cell-code}\nstops = readr::read_csv(here::here(\"posts\", \"sdpd-stops\", \"data-raw\", \"ripa_stop_reason_datasd.csv\"))\n```\n:::\n\n::: {.cell}\n\n```{.r .cell-code}\nstops |> \n  count(reason_for_stop_explanation) |> \n  View()\n```\n:::\n",
+    "supporting": [],
+    "filters": [
+      "rmarkdown/pagebreak.lua"
+    ],
+    "includes": {},
+    "engineDependencies": {},
+    "preserve": {},
+    "postProcess": true
+  }
+}

@@ -265,7 +265,7 @@ So what do these results say about the 3-3-3 vs 6-3 debate?[^8] Perhaps it's act
 
 ## Conclusion
 
-To conclude, #packthecourt
+To conclude, pack the court.
 
 
 ```{r}

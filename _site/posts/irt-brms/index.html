@@ -162,6 +162,11 @@ window.Quarto = {
 </i> 
 <span class="menu-text"></span></a>
   </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="../../index.xml"> <i class="bi bi-rss" role="img">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
 </ul>
           </div> <!-- /navcollapse -->
           <div class="quarto-navbar-tools">
@@ -352,14 +357,14 @@ y_{ij} \sim \text{Bernoulli}(\Phi(\gamma_j\theta_i + \xi_j))
 <div class="cell-output cell-output-stdout">
 <pre><code>Running MCMC with 4 chains, at most 8 in parallel, with 2 thread(s) per chain...
 
-Chain 2 finished in 36.0 seconds.
-Chain 3 finished in 36.4 seconds.
-Chain 4 finished in 43.2 seconds.
-Chain 1 finished in 48.9 seconds.
+Chain 1 finished in 33.6 seconds.
+Chain 3 finished in 34.4 seconds.
+Chain 2 finished in 48.7 seconds.
+Chain 4 finished in 51.0 seconds.
 
 All 4 chains finished successfully.
-Mean chain execution time: 41.1 seconds.
-Total execution time: 49.0 seconds.</code></pre>
+Mean chain execution time: 41.9 seconds.
+Total execution time: 51.1 seconds.</code></pre>
 </div>
 </div>
 <p>Let’s finally add our IRT formula, priors, and data into the <code>brm()</code> function and fit the IRT model. The <code>brm()</code> function takes these inputs and translate them in <a href="https://mc-stan.org/">Stan</a> code which is run using <code>backend = "cmdstanr"</code>.<a href="#fn7" class="footnote-ref" id="fnref7" role="doc-noteref"><sup>7</sup></a> The default four chains will sample in parallel if you set <code>cores = 4</code> or greater. Combining <code>cores = 8</code> with <code>threads = threading(2)</code> allows two of your cores to work on each chain, which can help speed up the sampling. The <code>adapt_delta = 0.99</code> and <code>max_treedepth = 15</code> options give the sampler a bit more <em>oomph</em>, to use a technical term. This will help make sure things don’t run off the rails due to identification issues during sampling—which can still creep up in IRT models despite our best efforts in setting priors.</p>
@@ -379,18 +384,18 @@ Formula: direction ~ gamma * theta + xi
 Multilevel Hyperparameters:
 ~caseId (Number of levels: 55) 
                     Estimate Est.Error l-95% CI u-95% CI Rhat Bulk_ESS Tail_ESS
-sd(gamma_Intercept)     1.68      1.13     0.35     4.41 1.01     1032     1412
-sd(xi_Intercept)        2.77      0.67     1.63     4.26 1.01      529     1397
+sd(gamma_Intercept)     1.70      1.11     0.38     4.60 1.00     1026     1677
+sd(xi_Intercept)        2.75      0.69     1.57     4.28 1.00      540     1752
 
 ~justiceName (Number of levels: 9) 
                     Estimate Est.Error l-95% CI u-95% CI Rhat Bulk_ESS Tail_ESS
-sd(theta_Intercept)     1.41      1.04     0.34     3.97 1.00     1464     2146
+sd(theta_Intercept)     1.43      1.03     0.32     4.02 1.00     1687     2130
 
 Regression Coefficients:
                 Estimate Est.Error l-95% CI u-95% CI Rhat Bulk_ESS Tail_ESS
-gamma_Intercept     1.11      0.69     0.23     2.84 1.00     1446     2086
-theta_Intercept    -1.01      1.04    -3.43     0.99 1.01      527      745
-xi_Intercept        0.88      0.72    -0.66     2.18 1.01      430      805
+gamma_Intercept     1.10      0.71     0.22     2.94 1.00     1560     2082
+theta_Intercept    -1.05      1.06    -3.28     1.13 1.00      358      439
+xi_Intercept        0.94      0.75    -0.69     2.32 1.00      293      567
 
 Draws were sampled using sample(hmc). For each parameter, Bulk_ESS
 and Tail_ESS are effective sample size measures, and Rhat is the potential
@@ -465,7 +470,7 @@ scale reduction factor on split chains (at convergence, Rhat = 1).</code></pre>
 </section>
 <section id="conclusion" class="level2" data-number="4">
 <h2 data-number="4" class="anchored" data-anchor-id="conclusion"><span class="header-section-number">4</span> Conclusion</h2>
-<p>To conclude, #packthecourt</p>
+<p>To conclude, pack the court.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sessionInfo</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
@@ -495,30 +500,31 @@ loaded via a namespace (and not attached):
  [4] QuickJSR_1.1.3       htmlwidgets_1.6.4    processx_3.8.4      
  [7] inline_0.3.19        lattice_0.22-6       tzdb_0.4.0          
 [10] ps_1.7.6             vctrs_0.6.5          tools_4.4.0         
-[13] generics_0.1.3       stats4_4.4.0         parallel_4.4.0      
-[16] tibble_3.2.1         fansi_1.0.6          cmdstanr_0.8.0.9000 
-[19] pkgconfig_2.0.3      Matrix_1.7-0         data.table_1.15.4   
-[22] checkmate_2.3.1      distributional_0.4.0 RcppParallel_5.1.7  
-[25] lifecycle_1.0.4      farver_2.1.2         compiler_4.4.0      
-[28] stringr_1.5.1        Brobdingnag_1.2-9    munsell_0.5.1       
-[31] codetools_0.2-20     htmltools_0.5.8.1    bayesplot_1.11.1    
-[34] yaml_2.3.8           crayon_1.5.2         pillar_1.9.0        
-[37] tidyr_1.3.1          arrayhelpers_1.1-0   StanHeaders_2.32.8  
-[40] bridgesampling_1.1-2 abind_1.4-5          nlme_3.1-164        
-[43] posterior_1.5.0      rstan_2.32.6         tidyselect_1.2.1    
-[46] digest_0.6.35        svUnit_1.0.6         mvtnorm_1.2-4       
-[49] stringi_1.8.3        reshape2_1.4.4       purrr_1.0.2         
-[52] labeling_0.4.3       forcats_1.0.0        rprojroot_2.0.4     
-[55] fastmap_1.1.1        grid_4.4.0           here_1.0.1          
-[58] colorspace_2.1-0     cli_3.6.2            magrittr_2.0.3      
-[61] loo_2.7.0            pkgbuild_1.4.4       utf8_1.2.4          
-[64] readr_2.1.5          withr_3.0.0          scales_1.3.0        
-[67] backports_1.5.0      bit64_4.0.5          rmarkdown_2.26      
-[70] matrixStats_1.3.0    bit_4.0.5            gridExtra_2.3       
-[73] hms_1.1.3            coda_0.19-4.1        evaluate_0.23       
-[76] knitr_1.47           rstantools_2.4.0     rlang_1.1.3         
-[79] glue_1.7.0           rstudioapi_0.16.0    vroom_1.6.5         
-[82] jsonlite_1.8.8       plyr_1.8.9           R6_2.5.1            </code></pre>
+[13] generics_0.1.3       stats4_4.4.0         curl_5.2.1          
+[16] parallel_4.4.0       tibble_3.2.1         fansi_1.0.6         
+[19] cmdstanr_0.8.0.9000  pkgconfig_2.0.3      Matrix_1.7-0        
+[22] data.table_1.15.4    checkmate_2.3.1      distributional_0.4.0
+[25] RcppParallel_5.1.7   lifecycle_1.0.4      farver_2.1.2        
+[28] compiler_4.4.0       stringr_1.5.1        Brobdingnag_1.2-9   
+[31] munsell_0.5.1        codetools_0.2-20     htmltools_0.5.8.1   
+[34] bayesplot_1.11.1     yaml_2.3.8           crayon_1.5.2        
+[37] pillar_1.9.0         tidyr_1.3.1          arrayhelpers_1.1-0  
+[40] StanHeaders_2.32.8   bridgesampling_1.1-2 abind_1.4-5         
+[43] nlme_3.1-164         posterior_1.5.0      rstan_2.32.6        
+[46] tidyselect_1.2.1     digest_0.6.35        svUnit_1.0.6        
+[49] mvtnorm_1.2-4        stringi_1.8.3        reshape2_1.4.4      
+[52] purrr_1.0.2          labeling_0.4.3       forcats_1.0.0       
+[55] rprojroot_2.0.4      fastmap_1.1.1        grid_4.4.0          
+[58] here_1.0.1           colorspace_2.1-0     cli_3.6.2           
+[61] magrittr_2.0.3       loo_2.7.0            pkgbuild_1.4.4      
+[64] utf8_1.2.4           readr_2.1.5          withr_3.0.0         
+[67] scales_1.3.0         backports_1.5.0      bit64_4.0.5         
+[70] rmarkdown_2.26       matrixStats_1.3.0    bit_4.0.5           
+[73] gridExtra_2.3        hms_1.1.3            coda_0.19-4.1       
+[76] evaluate_0.23        knitr_1.47           V8_4.4.2            
+[79] rstantools_2.4.0     rlang_1.1.3          glue_1.7.0          
+[82] vroom_1.6.5          rstudioapi_0.16.0    jsonlite_1.8.8      
+[85] plyr_1.8.9           R6_2.5.1            </code></pre>
 </div>
 </div>
 
