@@ -3,7 +3,7 @@ project:
 
 website:
   title: "Bertrand Wilden"
-  site-url: https://www.bwilden.com
+  site-url: "https://www.bwilden.com"
   description: "Bertrand Wilden's Blog"
   navbar:
     right:
