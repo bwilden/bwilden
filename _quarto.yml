@@ -11,7 +11,7 @@ website:
       - icon: github
         href: https://github.com/bwilden
       - icon: rss
-        href: blog.xml
+        href: https://www.bwilden.com/blog.xml
 format:
   html:
     theme: lux
