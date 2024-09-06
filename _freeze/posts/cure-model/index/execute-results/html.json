@@ -1,0 +1,17 @@
+{
+  "hash": "77646b652c4d758f440717234557ac52",
+  "result": {
+    "engine": "knitr",
+    "markdown": "---\ntitle: \"Cure Modeling\"\nauthor: \"Bertrand Wilden\"\ndate: \"2024-06-13\"\ncategories: [Bayes, Tutorial]\nmax-description-length: 20\nnumber-sections: true\ndraft: true\noutput:\n  html_document:\n    dev: ragg_png\nexecute: \n  message: false\n  warning: false\n---\n\n::: {.cell}\n\n```{.r .cell-code}\nlibrary(dplyr)\nlibrary(tidyr)\nlibrary(ggplot2)\n```\n:::\n\n::: {.cell}\n\n```{.r .cell-code}\nggplot() +\n  stat_function(fun = pweibull,\n                args = list(shape = .5,\n                            scale = 5),\n                xlim = c(-1, 25))\n```\n\n::: {.cell-output-display}\n![](index_files/figure-html/unnamed-chunk-2-1.png){width=672}\n:::\n:::\n\n\n\n\n$$\nf(y, t) = \\left[ \\pi f_{\\mathrm{E}}(y) \\right]^{\\delta} \\times \\left[ (1 - \\pi) (1 - F_{\\mathrm{E}}(y)) \\right]^{1 - \\delta}\n$$\n",
+    "supporting": [
+      "index_files"
+    ],
+    "filters": [
+      "rmarkdown/pagebreak.lua"
+    ],
+    "includes": {},
+    "engineDependencies": {},
+    "preserve": {},
+    "postProcess": true
+  }
+}

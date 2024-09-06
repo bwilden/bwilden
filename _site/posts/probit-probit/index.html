@@ -163,7 +163,7 @@ window.Quarto = {
 <span class="menu-text"></span></a>
   </li>  
   <li class="nav-item compact">
-    <a class="nav-link" href="https://twitter.com/bertrand_wilden"> <i class="bi bi-twitter" role="img">
+    <a class="nav-link" href="https://www.bwilden.com/blog.xml"> <i class="bi bi-rss" role="img">
 </i> 
 <span class="menu-text"></span></a>
   </li>  
@@ -241,15 +241,17 @@ window.Quarto = {
 </style>
 </div>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Packages and Global Options</span></span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyverse)</span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(brms)</span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidybayes)</span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(marginaleffects)</span>
-<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(unvotes)</span>
-<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(ggdist)</span>
-<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="fu">theme_set</span>(<span class="fu">theme_minimal</span>())</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<details class="code-fold">
+<summary>Packages Loaded</summary>
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyverse)</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(brms)</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidybayes)</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(marginaleffects)</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(unvotes)</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(ggdist)</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="fu">theme_set</span>(<span class="fu">theme_minimal</span>())</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
 </div>
 <p>When do you use a probit model in statistics? When you have some data and want to probe it for answers!</p>
 <p>It is also a method for modeling a data generating process which results in a binary 0/1 outcome. Maybe you are trying to explain whether someone votes in a particular election, whether a web user clicks on a link, or whether writing statistics blog posts helps its author get a job. Probit models are closely related to their more popular cousin: the logistic, or logit regression. So closely related, in fact, that I can’t think of any decisive reason why someone would choose one over the other. I like probit regression because I always aspire to maintain a high level of statistical probity in my work. In this post I am going to explain what a probit model is, how to fit one in R, and introduce a brand new nested hurdle probit model.</p>
@@ -331,7 +333,7 @@ p_i = \Phi(\beta_0 + \beta_1X_{1i} + \beta_2X_{2i} + \beta_3X_{3i})
 </div>
 </div>
 <p>Now we can finally fit our model! This is a very simple probit regression so we can use the <a href="https://paul-buerkner.github.io/brms/">brms R package</a>. Because all our predictor variables are categorical, we’ll use the <code>0 + ...</code> formula syntax for <a href="https://bookdown.org/content/4857/the-many-variables-the-spurious-waffles.html#categorical-variables">index coding</a>. The code <code>prior(normal(0, 2), class = b)</code> sets weakly informative priors for the coefficients on all these variables (notice how on the standard Normal CDF graph above almost all the probability changes occur between the values -2 and 2). We also need to include <code>bernoulli(link = "probit")</code> to ensure that <code>brm()</code> knows we want to run a probit model.</p>
-<div class="cell" data-hash="index_cache/html/unnamed-chunk-7_996e12c068eefa614fb80806ec161279">
+<div class="cell">
 <div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>fit_probit <span class="ot">&lt;-</span> <span class="fu">brm</span>(</span>
 <span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">bf</span>(vote <span class="sc">~</span> <span class="dv">0</span> <span class="sc">+</span> issue <span class="sc">+</span> ussr_vote),</span>
 <span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">prior =</span> <span class="fu">prior</span>(<span class="fu">normal</span>(<span class="dv">0</span>, <span class="dv">2</span>), <span class="at">class =</span> b),</span>
@@ -343,22 +345,38 @@ p_i = \Phi(\beta_0 + \beta_1X_{1i} + \beta_2X_{2i} + \beta_3X_{3i})
 <span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">silent =</span> <span class="dv">2</span>,</span>
 <span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>  <span class="at">refresh =</span> <span class="dv">0</span></span>
 <span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>Running MCMC with 4 parallel chains...
-
-Chain 3 finished in 4.4 seconds.
-Chain 2 finished in 4.6 seconds.
-Chain 4 finished in 4.7 seconds.
-Chain 1 finished in 4.9 seconds.
-
-All 4 chains finished successfully.
-Mean chain execution time: 4.7 seconds.
-Total execution time: 5.1 seconds.</code></pre>
-</div>
 </div>
 <p>Let’s run a quick posterior-predictive check to make sure there are no glaring issues with our model. The <span class="math inline">\(y\)</span> line in the graph below shows the actual distribution of 1’s and 0’s in our data, and the <span class="math inline">\(y_{rep}\)</span> lines show different draws from the <a href="https://mc-stan.org/bayesplot/reference/PPC-overview.html">posterior predictive distribution</a>.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="fu">pp_check</span>(fit_probit, <span class="at">ndraws =</span> <span class="dv">100</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="fu">pp_check</span>(fit_probit, <span class="at">ndraws =</span> <span class="dv">100</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Loading required package: rstan</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Loading required package: StanHeaders</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>
+rstan version 2.35.0.9000 (Stan version 2.35.0)</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>For execution on a local, multicore CPU with excess RAM we recommend calling
+options(mc.cores = parallel::detectCores()).
+To avoid recompilation of unchanged Stan programs, we recommend calling
+rstan_options(auto_write = TRUE)
+For within-chain threading using `reduce_sum()` or `map_rect()` Stan functions,
+change `threads_per_chain` option:
+rstan_options(threads_per_chain = 1)</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>
+Attaching package: 'rstan'</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>The following object is masked from 'package:tidyr':
+
+    extract</code></pre>
+</div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
@@ -382,154 +400,130 @@ Total execution time: 5.1 seconds.</code></pre>
 </blockquote>
 <p>Unsurprisingly there is no “trippy hurdle probit” regression family in <strong>brms</strong>. Luckily <strong>brms</strong> allows you to create your own model families using the <code>custom_family()</code> function. The code for this section was adapted from these two great resources on custom families in <strong>brms</strong>: <a href="https://www.andrewheiss.com/blog/2022/05/09/hurdle-lognormal-gaussian-brms/#hurdle-gaussian-model-with-a-custom-brms-family">Andrew Heiss’s blog</a>, and <a href="https://cran.r-project.org/web/packages/brms/vignettes/brms_customfamilies.html">brms package vignette</a>.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>hurdle_probit <span class="ot">&lt;-</span> <span class="fu">custom_family</span>(</span>
-<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>  <span class="st">"hurdle_probit"</span>,</span>
-<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">dpars =</span> <span class="fu">c</span>(<span class="st">"mu"</span>, <span class="st">"theta"</span>),</span>
-<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">links =</span> <span class="fu">c</span>(<span class="st">"identity"</span>, <span class="st">"probit"</span>),</span>
-<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">type =</span> <span class="st">"int"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>hurdle_probit <span class="ot">&lt;-</span> <span class="fu">custom_family</span>(</span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>  <span class="st">"hurdle_probit"</span>,</span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">dpars =</span> <span class="fu">c</span>(<span class="st">"mu"</span>, <span class="st">"theta"</span>),</span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">links =</span> <span class="fu">c</span>(<span class="st">"identity"</span>, <span class="st">"probit"</span>),</span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">type =</span> <span class="st">"int"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>First we define a <code>custom_family()</code> with two distributional parameters, or <code>dpars</code>. The <code>mu</code> parameter corresponds to the yes/no part of the model and <code>theta</code> corresponds to the hurdle part. Unlike “mu” (which is required from <strong>brms</strong>), there is nothing special about choosing the label “theta” here. We’re just following some <a href="https://mc-stan.org/docs/2_20/stan-users-guide/zero-inflated-section.html">common notation</a>.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>stan_funs <span class="ot">&lt;-</span> <span class="st">"</span></span>
-<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="st">  real hurdle_probit_lpmf(int y, real mu, real theta) {</span></span>
-<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="st">    if (y == 2) {</span></span>
-<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a><span class="st">      return bernoulli_lpmf(1 | theta);</span></span>
-<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a><span class="st">    } else {</span></span>
-<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a><span class="st">      return bernoulli_lpmf(0 | theta) +</span></span>
-<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a><span class="st">             bernoulli_lpmf(y | Phi(mu));</span></span>
-<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a><span class="st">    }</span></span>
-<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a><span class="st">  }</span></span>
-<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a><span class="st">"</span></span>
-<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a>stanvars <span class="ot">&lt;-</span> <span class="fu">stanvar</span>(<span class="at">scode =</span> stan_funs, <span class="at">block =</span> <span class="st">"functions"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>stan_funs <span class="ot">&lt;-</span> <span class="st">"</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a><span class="st">  real hurdle_probit_lpmf(int y, real mu, real theta) {</span></span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a><span class="st">    if (y == 2) {</span></span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a><span class="st">      return bernoulli_lpmf(1 | theta);</span></span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a><span class="st">    } else {</span></span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a><span class="st">      return bernoulli_lpmf(0 | theta) +</span></span>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a><span class="st">             bernoulli_lpmf(y | Phi(mu));</span></span>
+<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a><span class="st">    }</span></span>
+<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a><span class="st">  }</span></span>
+<span id="cb16-10"><a href="#cb16-10" aria-hidden="true" tabindex="-1"></a><span class="st">"</span></span>
+<span id="cb16-11"><a href="#cb16-11" aria-hidden="true" tabindex="-1"></a>stanvars <span class="ot">&lt;-</span> <span class="fu">stanvar</span>(<span class="at">scode =</span> stan_funs, <span class="at">block =</span> <span class="st">"functions"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>Next we need to write a new Stan function for <strong>brms</strong> to use. Note the conditional statement <code>y == 2</code> which corresponds to an abstention in our original data.</p>
 <p>When building a new, and more complicated model like this it is a good idea to run a quick simulation to ensure things are working as expected. Our goal here is to determine whether the model can recover the same parameters we used to generate a synthetic data set. In the simulation code below, these parameters correspond to <code>x_coef</code> and <code>z_coef</code>.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>N <span class="ot">&lt;-</span> <span class="dv">1000</span></span>
-<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>x_coef <span class="ot">&lt;-</span> <span class="sc">-</span><span class="dv">1</span></span>
-<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>z_coef <span class="ot">&lt;-</span> <span class="dv">2</span></span>
-<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>hurdle_sim_data <span class="ot">&lt;-</span> <span class="fu">tibble</span>(</span>
-<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">x =</span> <span class="fu">rnorm</span>(N), <span class="co"># random variable affecting yes/no</span></span>
-<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">z =</span> <span class="fu">rnorm</span>(N)  <span class="co"># random variable affecting hurdle</span></span>
-<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a>) <span class="sc">|&gt;</span> </span>
-<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">pr_abstain =</span> <span class="fu">pnorm</span>(z <span class="sc">*</span> z_coef),              <span class="co"># probability of voting or abstaining</span></span>
-<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a>         <span class="at">abstain =</span> <span class="fu">rbinom</span>(<span class="fu">n</span>(), <span class="dv">1</span>, <span class="at">prob =</span> pr_abstain), <span class="co"># binary abstain/vote</span></span>
-<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a>         <span class="at">pr_yes =</span> <span class="fu">pnorm</span>(x <span class="sc">*</span> x_coef),                  <span class="co"># probability of yes or no</span></span>
-<span id="cb12-12"><a href="#cb12-12" aria-hidden="true" tabindex="-1"></a>         <span class="at">yes =</span> <span class="fu">rbinom</span>(<span class="fu">n</span>(), <span class="dv">1</span>, <span class="at">prob =</span> pr_yes),         <span class="co"># binary yes/no</span></span>
-<span id="cb12-13"><a href="#cb12-13" aria-hidden="true" tabindex="-1"></a>         <span class="at">y =</span> <span class="fu">case_when</span>(abstain <span class="sc">==</span> <span class="dv">1</span> <span class="sc">~</span> <span class="dv">2</span>,              <span class="co"># final realized outcome</span></span>
-<span id="cb12-14"><a href="#cb12-14" aria-hidden="true" tabindex="-1"></a>                       yes <span class="sc">==</span> <span class="dv">1</span> <span class="sc">~</span> <span class="dv">1</span>,</span>
-<span id="cb12-15"><a href="#cb12-15" aria-hidden="true" tabindex="-1"></a>                       yes <span class="sc">==</span> <span class="dv">0</span> <span class="sc">~</span> <span class="dv">0</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>N <span class="ot">&lt;-</span> <span class="dv">1000</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>x_coef <span class="ot">&lt;-</span> <span class="sc">-</span><span class="dv">1</span></span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>z_coef <span class="ot">&lt;-</span> <span class="dv">2</span></span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>hurdle_sim_data <span class="ot">&lt;-</span> <span class="fu">tibble</span>(</span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">x =</span> <span class="fu">rnorm</span>(N), <span class="co"># random variable affecting yes/no</span></span>
+<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">z =</span> <span class="fu">rnorm</span>(N)  <span class="co"># random variable affecting hurdle</span></span>
+<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a>) <span class="sc">|&gt;</span> </span>
+<span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">pr_abstain =</span> <span class="fu">pnorm</span>(z <span class="sc">*</span> z_coef),              <span class="co"># probability of voting or abstaining</span></span>
+<span id="cb17-10"><a href="#cb17-10" aria-hidden="true" tabindex="-1"></a>         <span class="at">abstain =</span> <span class="fu">rbinom</span>(<span class="fu">n</span>(), <span class="dv">1</span>, <span class="at">prob =</span> pr_abstain), <span class="co"># binary abstain/vote</span></span>
+<span id="cb17-11"><a href="#cb17-11" aria-hidden="true" tabindex="-1"></a>         <span class="at">pr_yes =</span> <span class="fu">pnorm</span>(x <span class="sc">*</span> x_coef),                  <span class="co"># probability of yes or no</span></span>
+<span id="cb17-12"><a href="#cb17-12" aria-hidden="true" tabindex="-1"></a>         <span class="at">yes =</span> <span class="fu">rbinom</span>(<span class="fu">n</span>(), <span class="dv">1</span>, <span class="at">prob =</span> pr_yes),         <span class="co"># binary yes/no</span></span>
+<span id="cb17-13"><a href="#cb17-13" aria-hidden="true" tabindex="-1"></a>         <span class="at">y =</span> <span class="fu">case_when</span>(abstain <span class="sc">==</span> <span class="dv">1</span> <span class="sc">~</span> <span class="dv">2</span>,              <span class="co"># final realized outcome</span></span>
+<span id="cb17-14"><a href="#cb17-14" aria-hidden="true" tabindex="-1"></a>                       yes <span class="sc">==</span> <span class="dv">1</span> <span class="sc">~</span> <span class="dv">1</span>,</span>
+<span id="cb17-15"><a href="#cb17-15" aria-hidden="true" tabindex="-1"></a>                       yes <span class="sc">==</span> <span class="dv">0</span> <span class="sc">~</span> <span class="dv">0</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>The synthetic data <code>hurdle_sim_data</code> can now be fed into a model using the custom family we created above.</p>
-<div class="cell" data-hash="index_cache/html/unnamed-chunk-13_6beae9a5af26c972fe0b1919f6ae03ca">
-<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>fit_sim <span class="ot">&lt;-</span> <span class="fu">brm</span>(</span>
-<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">bf</span>(y <span class="sc">~</span> x,      <span class="co"># yes/no part</span></span>
-<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>     theta <span class="sc">~</span> z), <span class="co"># hurdle part</span></span>
-<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">prior =</span> <span class="fu">prior</span>(<span class="fu">normal</span>(<span class="dv">0</span>, <span class="dv">2</span>), <span class="at">class =</span> b, <span class="at">coef =</span> x) <span class="sc">+</span></span>
-<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>          <span class="fu">prior</span>(<span class="fu">normal</span>(<span class="dv">0</span>, <span class="dv">2</span>), <span class="at">class =</span> b, <span class="at">coef =</span> z, <span class="at">dpar =</span> theta),</span>
-<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">data =</span> hurdle_sim_data,</span>
-<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">family =</span> hurdle_probit, <span class="co"># the custom_family we made</span></span>
-<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">stanvars =</span> stanvars,    <span class="co"># the Stan function we made</span></span>
-<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">backend =</span> <span class="st">"cmdstanr"</span>,</span>
-<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a>  <span class="at">chains =</span> <span class="dv">4</span>,</span>
-<span id="cb13-11"><a href="#cb13-11" aria-hidden="true" tabindex="-1"></a>  <span class="at">cores =</span> <span class="dv">4</span>,</span>
-<span id="cb13-12"><a href="#cb13-12" aria-hidden="true" tabindex="-1"></a>  <span class="at">silent =</span> <span class="dv">2</span>,</span>
-<span id="cb13-13"><a href="#cb13-13" aria-hidden="true" tabindex="-1"></a>  <span class="at">refresh =</span> <span class="dv">0</span></span>
-<span id="cb13-14"><a href="#cb13-14" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>Running MCMC with 4 parallel chains...
-
-Chain 2 finished in 2.1 seconds.
-Chain 1 finished in 2.1 seconds.
-Chain 3 finished in 2.1 seconds.
-Chain 4 finished in 2.1 seconds.
-
-All 4 chains finished successfully.
-Mean chain execution time: 2.1 seconds.
-Total execution time: 2.3 seconds.</code></pre>
-</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>fit_sim <span class="ot">&lt;-</span> <span class="fu">brm</span>(</span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">bf</span>(y <span class="sc">~</span> x,      <span class="co"># yes/no part</span></span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>     theta <span class="sc">~</span> z), <span class="co"># hurdle part</span></span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">prior =</span> <span class="fu">prior</span>(<span class="fu">normal</span>(<span class="dv">0</span>, <span class="dv">2</span>), <span class="at">class =</span> b, <span class="at">coef =</span> x) <span class="sc">+</span></span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a>          <span class="fu">prior</span>(<span class="fu">normal</span>(<span class="dv">0</span>, <span class="dv">2</span>), <span class="at">class =</span> b, <span class="at">coef =</span> z, <span class="at">dpar =</span> theta),</span>
+<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">data =</span> hurdle_sim_data,</span>
+<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">family =</span> hurdle_probit, <span class="co"># the custom_family we made</span></span>
+<span id="cb18-8"><a href="#cb18-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">stanvars =</span> stanvars,    <span class="co"># the Stan function we made</span></span>
+<span id="cb18-9"><a href="#cb18-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">backend =</span> <span class="st">"cmdstanr"</span>,</span>
+<span id="cb18-10"><a href="#cb18-10" aria-hidden="true" tabindex="-1"></a>  <span class="at">chains =</span> <span class="dv">4</span>,</span>
+<span id="cb18-11"><a href="#cb18-11" aria-hidden="true" tabindex="-1"></a>  <span class="at">cores =</span> <span class="dv">4</span>,</span>
+<span id="cb18-12"><a href="#cb18-12" aria-hidden="true" tabindex="-1"></a>  <span class="at">silent =</span> <span class="dv">2</span>,</span>
+<span id="cb18-13"><a href="#cb18-13" aria-hidden="true" tabindex="-1"></a>  <span class="at">refresh =</span> <span class="dv">0</span></span>
+<span id="cb18-14"><a href="#cb18-14" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="fu">fixef</span>(fit_sim)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="fu">fixef</span>(fit_sim)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>                   Estimate  Est.Error       Q2.5       Q97.5
-Intercept       -0.01391639 0.06639284 -0.1390825  0.11676975
-theta_Intercept -0.03150056 0.05460410 -0.1343178  0.07642558
-x               -0.93124834 0.08551786 -1.0999510 -0.76858800
-theta_z          1.98504156 0.11159384  1.7738840  2.21075475</code></pre>
+<pre><code>                    Estimate  Est.Error       Q2.5      Q97.5
+Intercept        0.082220483 0.06577341 -0.0486303  0.2097614
+theta_Intercept  0.002906429 0.05496474 -0.1094893  0.1081701
+x               -0.946318009 0.08479010 -1.1150805 -0.7863664
+theta_z          1.988965247 0.11649643  1.7666708  2.2218023</code></pre>
 </div>
 </div>
 <p>Taking a look at the coefficient estimates from our simulation model we see that we get roughly the same values as those that were used to generate the synthetic data! And just to further tie everything together, we can separate the two parts of the full hurdle model out and check the results.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Using maximum likelihood here to save time</span></span>
-<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a><span class="fu">glm</span>(abstain <span class="sc">~</span> z, </span>
-<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>    <span class="at">data =</span> hurdle_sim_data, </span>
-<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">family =</span> <span class="fu">binomial</span>(<span class="at">link =</span> <span class="st">"probit"</span>)) <span class="sc">|&gt;</span> </span>
-<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>  broom<span class="sc">::</span><span class="fu">tidy</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Using maximum likelihood here to save time</span></span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a><span class="fu">glm</span>(abstain <span class="sc">~</span> z, </span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>    <span class="at">data =</span> hurdle_sim_data, </span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">family =</span> <span class="fu">binomial</span>(<span class="at">link =</span> <span class="st">"probit"</span>)) <span class="sc">|&gt;</span> </span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a>  broom<span class="sc">::</span><span class="fu">tidy</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code># A tibble: 2 × 5
   term        estimate std.error statistic  p.value
   &lt;chr&gt;          &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;    &lt;dbl&gt;
-1 (Intercept)  -0.0315    0.0559    -0.563 5.73e- 1
-2 z             1.99      0.113     17.6   1.19e-69</code></pre>
+1 (Intercept)    0.107    0.0547      1.96 4.96e- 2
+2 z              1.94     0.113      17.2  2.15e-66</code></pre>
 </div>
 </div>
 <p>Above we see the effect of <code>z</code> on whether an observation in our simulated data was marked “abstain” or not. Note that the coefficient estimate is the same as <code>theta_z</code> in the full hurdle model above.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="fu">glm</span>(yes <span class="sc">~</span> x, </span>
-<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>    <span class="at">data =</span> hurdle_sim_data <span class="sc">|&gt;</span> <span class="fu">filter</span>(abstain <span class="sc">==</span> <span class="dv">0</span>), </span>
-<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>    <span class="at">family =</span> <span class="fu">binomial</span>(<span class="at">link =</span> <span class="st">"probit"</span>)) <span class="sc">|&gt;</span> </span>
-<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>  broom<span class="sc">::</span><span class="fu">tidy</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="fu">glm</span>(yes <span class="sc">~</span> x, </span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>    <span class="at">data =</span> hurdle_sim_data <span class="sc">|&gt;</span> <span class="fu">filter</span>(abstain <span class="sc">==</span> <span class="dv">0</span>), </span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a>    <span class="at">family =</span> <span class="fu">binomial</span>(<span class="at">link =</span> <span class="st">"probit"</span>)) <span class="sc">|&gt;</span> </span>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a>  broom<span class="sc">::</span><span class="fu">tidy</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code># A tibble: 2 × 5
   term        estimate std.error statistic  p.value
   &lt;chr&gt;          &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;    &lt;dbl&gt;
-1 (Intercept)  -0.0156    0.0644    -0.243 8.08e- 1
-2 x            -0.928     0.0817   -11.3   7.64e-30</code></pre>
+1 (Intercept)   0.0413    0.0677     0.610 5.42e- 1
+2 x            -1.06      0.0936   -11.3   1.34e-29</code></pre>
 </div>
 </div>
 <p>And here we see the effect of <code>x</code> on the realized outcome <code>y</code> in the simulated data (after excluding the abstentions). Again, the coefficient estimate in this model nicely replicates the <code>x</code> estimate from the full hurdle model above.</p>
 <p>Now that we’re confident the hurdle probit model is working as intended, we can fit it to the real-world UN data we prepared earlier. We’ll keep the part of the model predicting yes/no votes the same (i.e.&nbsp;using resolution issue and USSR vote variables as predictors). How should we predict whether the US votes or abstains from a particular resolution? Luckily for us, the <strong>unvotes</strong> data comes with a variable <code>importantvote</code>. Again, I’m no international relations expert but maybe if a resolution is deemed to be “important” the US will be more likely to weigh in—for or against.</p>
-<div class="cell" data-hash="index_cache/html/unnamed-chunk-17_924a71f96ad7f2b4883e51284d6a5d36">
-<div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>fit_hurdle <span class="ot">&lt;-</span> <span class="fu">brm</span>(</span>
-<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">bf</span>(vote <span class="sc">~</span> <span class="dv">0</span> <span class="sc">+</span> issue <span class="sc">+</span> ussr_vote, <span class="co"># yes/no model</span></span>
-<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>     theta <span class="sc">~</span> importantvote),       <span class="co"># abstain/vote model</span></span>
-<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">family =</span> hurdle_probit,</span>
-<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">stanvars =</span> stanvars,</span>
-<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">data =</span> un,</span>
-<span id="cb21-7"><a href="#cb21-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">cores =</span> <span class="dv">4</span>,</span>
-<span id="cb21-8"><a href="#cb21-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">chains =</span> <span class="dv">4</span>,</span>
-<span id="cb21-9"><a href="#cb21-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">backend =</span> <span class="st">"cmdstanr"</span>,</span>
-<span id="cb21-10"><a href="#cb21-10" aria-hidden="true" tabindex="-1"></a>  <span class="at">silent =</span> <span class="dv">2</span>,</span>
-<span id="cb21-11"><a href="#cb21-11" aria-hidden="true" tabindex="-1"></a>  <span class="at">refresh =</span> <span class="dv">0</span></span>
-<span id="cb21-12"><a href="#cb21-12" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>Running MCMC with 4 parallel chains...
-
-Chain 4 finished in 19.0 seconds.
-Chain 3 finished in 19.5 seconds.
-Chain 2 finished in 20.1 seconds.
-Chain 1 finished in 20.4 seconds.
-
-All 4 chains finished successfully.
-Mean chain execution time: 19.7 seconds.
-Total execution time: 20.5 seconds.</code></pre>
-</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb25"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a>fit_hurdle <span class="ot">&lt;-</span> <span class="fu">brm</span>(</span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">bf</span>(vote <span class="sc">~</span> <span class="dv">0</span> <span class="sc">+</span> issue <span class="sc">+</span> ussr_vote, <span class="co"># yes/no model</span></span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a>     theta <span class="sc">~</span> importantvote),       <span class="co"># abstain/vote model</span></span>
+<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">family =</span> hurdle_probit,</span>
+<span id="cb25-5"><a href="#cb25-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">stanvars =</span> stanvars,</span>
+<span id="cb25-6"><a href="#cb25-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">data =</span> un,</span>
+<span id="cb25-7"><a href="#cb25-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">cores =</span> <span class="dv">4</span>,</span>
+<span id="cb25-8"><a href="#cb25-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">chains =</span> <span class="dv">4</span>,</span>
+<span id="cb25-9"><a href="#cb25-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">backend =</span> <span class="st">"cmdstanr"</span>,</span>
+<span id="cb25-10"><a href="#cb25-10" aria-hidden="true" tabindex="-1"></a>  <span class="at">silent =</span> <span class="dv">2</span>,</span>
+<span id="cb25-11"><a href="#cb25-11" aria-hidden="true" tabindex="-1"></a>  <span class="at">refresh =</span> <span class="dv">0</span></span>
+<span id="cb25-12"><a href="#cb25-12" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>Generating draws from the posterior predictive distribution from a custom family model in <strong>brms</strong> requires another user-defined function. <a href="https://cran.r-project.org/web/packages/brms/vignettes/brms_customfamilies.html">This vignette</a> helps us out with this once again.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a>posterior_predict_hurdle_probit <span class="ot">&lt;-</span> <span class="cf">function</span>(i, prep, ...) {</span>
-<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>  mu <span class="ot">&lt;-</span> brms<span class="sc">::</span><span class="fu">get_dpar</span>(prep, <span class="st">"mu"</span>, <span class="at">i =</span> i)</span>
-<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a>  theta <span class="ot">&lt;-</span> brms<span class="sc">::</span><span class="fu">get_dpar</span>(prep, <span class="st">"theta"</span>, <span class="at">i =</span> i)</span>
-<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a>  hu <span class="ot">&lt;-</span> <span class="fu">runif</span>(prep<span class="sc">$</span>ndraws, <span class="dv">0</span>, <span class="dv">1</span>)</span>
-<span id="cb23-6"><a href="#cb23-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ifelse</span>(hu <span class="sc">&lt;</span> theta, <span class="dv">2</span>, <span class="fu">rbinom</span>(prep<span class="sc">$</span>ndraws, <span class="dv">1</span>, <span class="fu">pnorm</span>(mu)))</span>
-<span id="cb23-7"><a href="#cb23-7" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb26"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a>posterior_predict_hurdle_probit <span class="ot">&lt;-</span> <span class="cf">function</span>(i, prep, ...) {</span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a>  mu <span class="ot">&lt;-</span> brms<span class="sc">::</span><span class="fu">get_dpar</span>(prep, <span class="st">"mu"</span>, <span class="at">i =</span> i)</span>
+<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a>  theta <span class="ot">&lt;-</span> brms<span class="sc">::</span><span class="fu">get_dpar</span>(prep, <span class="st">"theta"</span>, <span class="at">i =</span> i)</span>
+<span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-5"><a href="#cb26-5" aria-hidden="true" tabindex="-1"></a>  hu <span class="ot">&lt;-</span> <span class="fu">runif</span>(prep<span class="sc">$</span>ndraws, <span class="dv">0</span>, <span class="dv">1</span>)</span>
+<span id="cb26-6"><a href="#cb26-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ifelse</span>(hu <span class="sc">&lt;</span> theta, <span class="dv">2</span>, <span class="fu">rbinom</span>(prep<span class="sc">$</span>ndraws, <span class="dv">1</span>, <span class="fu">pnorm</span>(mu)))</span>
+<span id="cb26-7"><a href="#cb26-7" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>Now we can check our results using <code>pp_check()</code></p>
 <div class="cell preview-image">
-<div class="sourceCode cell-code" id="cb24"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="fu">pp_check</span>(fit_hurdle, <span class="at">ndraws =</span> <span class="dv">100</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb27"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="fu">pp_check</span>(fit_hurdle, <span class="at">ndraws =</span> <span class="dv">100</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
@@ -544,69 +538,60 @@ Total execution time: 20.5 seconds.</code></pre>
 <h2 class="anchored" data-anchor-id="concluding-thoughts">Concluding Thoughts</h2>
 <p>If you’re tackling a data problem involving binary outcomes and aiming to explicitly model abstentions, consider taking the trippy hurdle probit model for a spin.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb25"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sessionInfo</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb28"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sessionInfo</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>R version 4.1.1 (2021-08-10)
-Platform: x86_64-apple-darwin17.0 (64-bit)
-Running under: macOS Big Sur 10.16
+<pre><code>R version 4.4.0 (2024-04-24)
+Platform: aarch64-apple-darwin20
+Running under: macOS Sonoma 14.3
 
 Matrix products: default
-BLAS:   /Library/Frameworks/R.framework/Versions/4.1/Resources/lib/libRblas.0.dylib
-LAPACK: /Library/Frameworks/R.framework/Versions/4.1/Resources/lib/libRlapack.dylib
+BLAS:   /Library/Frameworks/R.framework/Versions/4.4-arm64/Resources/lib/libRblas.0.dylib 
+LAPACK: /Library/Frameworks/R.framework/Versions/4.4-arm64/Resources/lib/libRlapack.dylib;  LAPACK version 3.12.0
 
 locale:
 [1] en_US.UTF-8/en_US.UTF-8/en_US.UTF-8/C/en_US.UTF-8/en_US.UTF-8
+
+time zone: America/Los_Angeles
+tzcode source: internal
 
 attached base packages:
 [1] stats     graphics  grDevices utils     datasets  methods   base     
 
 other attached packages:
- [1] ggdist_3.0.99.9000     unvotes_0.3.0          marginaleffects_0.13.0
- [4] tidybayes_3.0.2.9000   brms_2.17.4            Rcpp_1.0.10           
- [7] lubridate_1.9.2        forcats_1.0.0          stringr_1.5.0         
-[10] dplyr_1.1.0            purrr_1.0.1            readr_2.1.4           
-[13] tidyr_1.3.0            tibble_3.2.1           ggplot2_3.4.1         
-[16] tidyverse_2.0.0       
+ [1] rstan_2.35.0.9000       StanHeaders_2.35.0.9000 ggdist_3.3.2           
+ [4] unvotes_0.3.0           marginaleffects_0.22.0  tidybayes_3.0.6        
+ [7] brms_2.21.6             Rcpp_1.0.12             lubridate_1.9.3        
+[10] forcats_1.0.0           stringr_1.5.1           dplyr_1.1.4            
+[13] purrr_1.0.2             readr_2.1.5             tidyr_1.3.1            
+[16] tibble_3.2.1            ggplot2_3.5.1           tidyverse_2.0.0        
 
 loaded via a namespace (and not attached):
-  [1] minqa_1.2.4          colorspace_2.0-3     ellipsis_0.3.2      
-  [4] snakecase_0.11.0     estimability_1.3     markdown_1.4        
-  [7] base64enc_0.1-3      rstudioapi_0.14      farver_2.1.1        
- [10] rstan_2.26.11        svUnit_1.0.6         DT_0.26             
- [13] fansi_1.0.4          mvtnorm_1.1-3        bridgesampling_1.1-2
- [16] codetools_0.2-18     splines_4.1.1        knitr_1.42          
- [19] shinythemes_1.2.0    bayesplot_1.10.0     projpred_2.0.2      
- [22] jsonlite_1.8.4       nloptr_1.2.2.2       broom_1.0.3         
- [25] shiny_1.7.4          compiler_4.1.1       emmeans_1.7.2       
- [28] backports_1.4.1      Matrix_1.3-4         fastmap_1.1.1       
- [31] cli_3.6.1            later_1.3.0          htmltools_0.5.5     
- [34] prettyunits_1.1.1    tools_4.1.1          igraph_1.3.5        
- [37] coda_0.19-4          gtable_0.3.1         glue_1.6.2          
- [40] reshape2_1.4.4       posterior_1.3.1      V8_4.2.0            
- [43] vctrs_0.6.2          nlme_3.1-152         crosstalk_1.2.0     
- [46] tensorA_0.36.2       xfun_0.39            ps_1.7.5            
- [49] lme4_1.1-27.1        timechange_0.1.1     mime_0.12           
- [52] miniUI_0.1.1.1       lifecycle_1.0.3      gtools_3.9.4        
- [55] MASS_7.3-54          zoo_1.8-11           scales_1.2.1        
- [58] colourpicker_1.2.0   hms_1.1.2            promises_1.2.0.1    
- [61] Brobdingnag_1.2-7    parallel_4.1.1       inline_0.3.19       
- [64] shinystan_2.6.0      gamm4_0.2-6          yaml_2.3.7          
- [67] curl_5.0.0           gridExtra_2.3        loo_2.5.1           
- [70] StanHeaders_2.26.11  stringi_1.7.12       dygraphs_1.1.1.6    
- [73] checkmate_2.1.0      boot_1.3-28          pkgbuild_1.4.0      
- [76] cmdstanr_0.5.3       rlang_1.1.0          pkgconfig_2.0.3     
- [79] matrixStats_0.63.0   distributional_0.3.1 evaluate_0.20       
- [82] lattice_0.20-44      labeling_0.4.2       rstantools_2.2.0    
- [85] htmlwidgets_1.6.2    tidyselect_1.2.0     processx_3.8.1      
- [88] plyr_1.8.8           magrittr_2.0.3       R6_2.5.1            
- [91] generics_0.1.3       mgcv_1.8-36          pillar_1.9.0        
- [94] withr_2.5.0          xts_0.12.2           abind_1.4-5         
- [97] janitor_2.1.0        crayon_1.5.2         arrayhelpers_1.1-0  
-[100] utf8_1.2.3           tzdb_0.3.0           rmarkdown_2.21      
-[103] grid_4.1.1           data.table_1.14.6    callr_3.7.3         
-[106] threejs_0.3.3        digest_0.6.31        xtable_1.8-4        
-[109] httpuv_1.6.9         RcppParallel_5.1.5   stats4_4.1.1        
-[112] munsell_0.5.0        shinyjs_2.1.0       </code></pre>
+ [1] svUnit_1.0.6          tidyselect_1.2.1      farver_2.1.2         
+ [4] loo_2.8.0.9000        fastmap_1.1.1         tensorA_0.36.2.1     
+ [7] janitor_2.2.0         digest_0.6.36         timechange_0.3.0     
+[10] lifecycle_1.0.4       processx_3.8.4        magrittr_2.0.3       
+[13] posterior_1.6.0       compiler_4.4.0        rlang_1.1.4          
+[16] tools_4.4.0           utf8_1.2.4            yaml_2.3.8           
+[19] data.table_1.15.4     knitr_1.47            labeling_0.4.3       
+[22] bridgesampling_1.1-2  htmlwidgets_1.6.4     pkgbuild_1.4.4       
+[25] curl_5.2.1            plyr_1.8.9            cmdstanr_0.8.0.9000  
+[28] abind_1.4-5           withr_3.0.0           grid_4.4.0           
+[31] stats4_4.4.0          fansi_1.0.6           colorspace_2.1-0     
+[34] inline_0.3.19         scales_1.3.0          cli_3.6.3            
+[37] mvtnorm_1.2-5         rmarkdown_2.26        generics_0.1.3       
+[40] RcppParallel_5.1.8    rstudioapi_0.16.0     reshape2_1.4.4       
+[43] tzdb_0.4.0            bayesplot_1.11.1.9000 parallel_4.4.0       
+[46] matrixStats_1.3.0     vctrs_0.6.5           V8_4.4.2             
+[49] Matrix_1.7-0          jsonlite_1.8.8        hms_1.1.3            
+[52] arrayhelpers_1.1-0    glue_1.7.0            codetools_0.2-20     
+[55] ps_1.7.7              distributional_0.4.0  stringi_1.8.4        
+[58] gtable_0.3.5          QuickJSR_1.3.0        munsell_0.5.1        
+[61] pillar_1.9.0          htmltools_0.5.8.1     Brobdingnag_1.2-9    
+[64] R6_2.5.1              evaluate_0.23         lattice_0.22-6       
+[67] backports_1.5.0       broom_1.0.5           snakecase_0.11.1     
+[70] rstantools_2.4.0.9000 coda_0.19-4.1         gridExtra_2.3        
+[73] nlme_3.1-164          checkmate_2.3.1       xfun_0.44            
+[76] pkgconfig_2.0.3      </code></pre>
 </div>
 </div>
 

@@ -15,8 +15,8 @@ max-description-length: 20
 ```{r}
 #| message: false
 #| warning: false
-
-# Packages and Global Options
+#| code-fold: true
+#| code-summary: "Packages Loaded"
 library(tidyverse)
 library(brms)
 library(tidybayes)

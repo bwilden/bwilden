@@ -281,12 +281,14 @@ y_{ij} \sim \text{Bernoulli}(\Phi(\gamma_j\theta_i + \xi_j))
 <li>Extract the ideology estimates</li>
 </ol>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Packages used</span></span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(dplyr)</span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(brms)</span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidybayes)</span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(ggplot2)</span>
-<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(ggdist)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<details class="code-fold">
+<summary>Packages Loaded</summary>
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(dplyr)</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(brms)</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidybayes)</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(ggplot2)</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(ggdist)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
 </div>
 <div class="cell">
 <style type="text/css">
@@ -357,14 +359,14 @@ y_{ij} \sim \text{Bernoulli}(\Phi(\gamma_j\theta_i + \xi_j))
 <div class="cell-output cell-output-stdout">
 <pre><code>Running MCMC with 4 chains, at most 8 in parallel, with 2 thread(s) per chain...
 
-Chain 1 finished in 33.6 seconds.
-Chain 3 finished in 34.4 seconds.
-Chain 2 finished in 48.7 seconds.
-Chain 4 finished in 51.0 seconds.
+Chain 4 finished in 33.1 seconds.
+Chain 1 finished in 34.5 seconds.
+Chain 2 finished in 39.3 seconds.
+Chain 3 finished in 43.8 seconds.
 
 All 4 chains finished successfully.
-Mean chain execution time: 41.9 seconds.
-Total execution time: 51.1 seconds.</code></pre>
+Mean chain execution time: 37.7 seconds.
+Total execution time: 44.0 seconds.</code></pre>
 </div>
 </div>
 <p>Let’s finally add our IRT formula, priors, and data into the <code>brm()</code> function and fit the IRT model. The <code>brm()</code> function takes these inputs and translate them in <a href="https://mc-stan.org/">Stan</a> code which is run using <code>backend = "cmdstanr"</code>.<a href="#fn7" class="footnote-ref" id="fnref7" role="doc-noteref"><sup>7</sup></a> The default four chains will sample in parallel if you set <code>cores = 4</code> or greater. Combining <code>cores = 8</code> with <code>threads = threading(2)</code> allows two of your cores to work on each chain, which can help speed up the sampling. The <code>adapt_delta = 0.99</code> and <code>max_treedepth = 15</code> options give the sampler a bit more <em>oomph</em>, to use a technical term. This will help make sure things don’t run off the rails due to identification issues during sampling—which can still creep up in IRT models despite our best efforts in setting priors.</p>
@@ -384,18 +386,18 @@ Formula: direction ~ gamma * theta + xi
 Multilevel Hyperparameters:
 ~caseId (Number of levels: 55) 
                     Estimate Est.Error l-95% CI u-95% CI Rhat Bulk_ESS Tail_ESS
-sd(gamma_Intercept)     1.70      1.11     0.38     4.60 1.00     1026     1677
-sd(xi_Intercept)        2.75      0.69     1.57     4.28 1.00      540     1752
+sd(gamma_Intercept)     1.64      1.11     0.31     4.59 1.00      959     1366
+sd(xi_Intercept)        2.81      0.69     1.62     4.26 1.01      355     1091
 
 ~justiceName (Number of levels: 9) 
                     Estimate Est.Error l-95% CI u-95% CI Rhat Bulk_ESS Tail_ESS
-sd(theta_Intercept)     1.43      1.03     0.32     4.02 1.00     1687     2130
+sd(theta_Intercept)     1.51      1.24     0.33     4.38 1.00     1566     2099
 
 Regression Coefficients:
                 Estimate Est.Error l-95% CI u-95% CI Rhat Bulk_ESS Tail_ESS
-gamma_Intercept     1.10      0.71     0.22     2.94 1.00     1560     2082
-theta_Intercept    -1.05      1.06    -3.28     1.13 1.00      358      439
-xi_Intercept        0.94      0.75    -0.69     2.32 1.00      293      567
+gamma_Intercept     1.07      0.72     0.20     2.91 1.00     1417     1569
+theta_Intercept    -1.02      1.10    -3.39     1.15 1.02      230      300
+xi_Intercept        0.91      0.76    -0.69     2.24 1.02      227      394
 
 Draws were sampled using sample(hmc). For each parameter, Bulk_ESS
 and Tail_ESS are effective sample size measures, and Rhat is the potential
@@ -492,39 +494,39 @@ attached base packages:
 [1] stats     graphics  grDevices utils     datasets  methods   base     
 
 other attached packages:
-[1] ggdist_3.3.2    ggplot2_3.5.1   tidybayes_3.0.6 brms_2.21.0    
-[5] Rcpp_1.0.12     dplyr_1.1.4    
+[1] rstan_2.35.0.9000       StanHeaders_2.35.0.9000 ggdist_3.3.2           
+[4] ggplot2_3.5.1           tidybayes_3.0.6         brms_2.21.6            
+[7] Rcpp_1.0.12             dplyr_1.1.4            
 
 loaded via a namespace (and not attached):
- [1] gtable_0.3.5         tensorA_0.36.2.1     xfun_0.44           
- [4] QuickJSR_1.1.3       htmlwidgets_1.6.4    processx_3.8.4      
- [7] inline_0.3.19        lattice_0.22-6       tzdb_0.4.0          
-[10] ps_1.7.6             vctrs_0.6.5          tools_4.4.0         
-[13] generics_0.1.3       stats4_4.4.0         curl_5.2.1          
-[16] parallel_4.4.0       tibble_3.2.1         fansi_1.0.6         
-[19] cmdstanr_0.8.0.9000  pkgconfig_2.0.3      Matrix_1.7-0        
-[22] data.table_1.15.4    checkmate_2.3.1      distributional_0.4.0
-[25] RcppParallel_5.1.7   lifecycle_1.0.4      farver_2.1.2        
-[28] compiler_4.4.0       stringr_1.5.1        Brobdingnag_1.2-9   
-[31] munsell_0.5.1        codetools_0.2-20     htmltools_0.5.8.1   
-[34] bayesplot_1.11.1     yaml_2.3.8           crayon_1.5.2        
-[37] pillar_1.9.0         tidyr_1.3.1          arrayhelpers_1.1-0  
-[40] StanHeaders_2.32.8   bridgesampling_1.1-2 abind_1.4-5         
-[43] nlme_3.1-164         posterior_1.5.0      rstan_2.32.6        
-[46] tidyselect_1.2.1     digest_0.6.35        svUnit_1.0.6        
-[49] mvtnorm_1.2-4        stringi_1.8.3        reshape2_1.4.4      
-[52] purrr_1.0.2          labeling_0.4.3       forcats_1.0.0       
-[55] rprojroot_2.0.4      fastmap_1.1.1        grid_4.4.0          
-[58] here_1.0.1           colorspace_2.1-0     cli_3.6.2           
-[61] magrittr_2.0.3       loo_2.7.0            pkgbuild_1.4.4      
-[64] utf8_1.2.4           readr_2.1.5          withr_3.0.0         
-[67] scales_1.3.0         backports_1.5.0      bit64_4.0.5         
-[70] rmarkdown_2.26       matrixStats_1.3.0    bit_4.0.5           
-[73] gridExtra_2.3        hms_1.1.3            coda_0.19-4.1       
-[76] evaluate_0.23        knitr_1.47           V8_4.4.2            
-[79] rstantools_2.4.0     rlang_1.1.3          glue_1.7.0          
-[82] vroom_1.6.5          rstudioapi_0.16.0    jsonlite_1.8.8      
-[85] plyr_1.8.9           R6_2.5.1            </code></pre>
+ [1] svUnit_1.0.6          tidyselect_1.2.1      farver_2.1.2         
+ [4] loo_2.8.0.9000        fastmap_1.1.1         tensorA_0.36.2.1     
+ [7] digest_0.6.36         lifecycle_1.0.4       processx_3.8.4       
+[10] magrittr_2.0.3        posterior_1.6.0       compiler_4.4.0       
+[13] rlang_1.1.4           tools_4.4.0           utf8_1.2.4           
+[16] yaml_2.3.8            data.table_1.15.4     knitr_1.47           
+[19] labeling_0.4.3        bridgesampling_1.1-2  htmlwidgets_1.6.4    
+[22] bit_4.0.5             pkgbuild_1.4.4        curl_5.2.1           
+[25] here_1.0.1            plyr_1.8.9            cmdstanr_0.8.0.9000  
+[28] abind_1.4-5           withr_3.0.0           purrr_1.0.2          
+[31] grid_4.4.0            stats4_4.4.0          fansi_1.0.6          
+[34] colorspace_2.1-0      inline_0.3.19         scales_1.3.0         
+[37] cli_3.6.3             mvtnorm_1.2-5         rmarkdown_2.26       
+[40] crayon_1.5.2          generics_0.1.3        RcppParallel_5.1.8   
+[43] rstudioapi_0.16.0     reshape2_1.4.4        tzdb_0.4.0           
+[46] stringr_1.5.1         bayesplot_1.11.1.9000 parallel_4.4.0       
+[49] matrixStats_1.3.0     vctrs_0.6.5           V8_4.4.2             
+[52] Matrix_1.7-0          jsonlite_1.8.8        hms_1.1.3            
+[55] arrayhelpers_1.1-0    bit64_4.0.5           tidyr_1.3.1          
+[58] glue_1.7.0            codetools_0.2-20      ps_1.7.7             
+[61] distributional_0.4.0  stringi_1.8.4         gtable_0.3.5         
+[64] QuickJSR_1.3.0        munsell_0.5.1         tibble_3.2.1         
+[67] pillar_1.9.0          htmltools_0.5.8.1     Brobdingnag_1.2-9    
+[70] R6_2.5.1              rprojroot_2.0.4       vroom_1.6.5          
+[73] evaluate_0.23         lattice_0.22-6        readr_2.1.5          
+[76] backports_1.5.0       rstantools_2.4.0.9000 coda_0.19-4.1        
+[79] gridExtra_2.3         nlme_3.1-164          checkmate_2.3.1      
+[82] xfun_0.44             forcats_1.0.0         pkgconfig_2.0.3      </code></pre>
 </div>
 </div>
 

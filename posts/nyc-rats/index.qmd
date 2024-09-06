@@ -15,7 +15,8 @@ Rats are "public enemy number one"---at least according to New York City Mayor E
 In this project I develop the *NYC Rat Index* using geospatial analysis in R. We will walk through some GIS wrangling steps and then employ Bayesian modeling to measure rat activity across New York. Use these results to figure out which neighborhoods to avoid---or which to seek out---depending on your overall disposition towards wild rodents.
 
 ```{r}
-# Packages used:
+#| code-fold: true
+#| code-summary: "Packages Loaded"
 library(dplyr)
 library(lubridate)
 library(tidyr)
@@ -280,6 +281,8 @@ rat_scores |>
 
 ```{r}
 #| warning: false
+#| code-fold: true
+#| code-summary: "Interactive Rat Plot Code"
 l <- st_as_sf(rat_scores) |> 
   leaflet() |> 
   addTiles()

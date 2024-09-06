@@ -89,7 +89,8 @@ Now let's turn to coding up the IRT model in @eq-2pl, and use it to measure the 
 3. Extract the ideology estimates
 
 ```{r}
-# Packages used
+#| code-fold: true
+#| code-summary: "Packages Loaded"
 library(dplyr)
 library(brms)
 library(tidybayes)

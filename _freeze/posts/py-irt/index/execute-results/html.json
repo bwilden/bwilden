@@ -1,0 +1,12 @@
+{
+  "hash": "2292e58ef9a8145d243859b7c044d7e8",
+  "result": {
+    "engine": "jupyter",
+    "markdown": "---\ntitle: PyIRT\nauthor: Bertrand Wilden\ndate: '2024-06-13'\ncategories:\n  - Bayes\n  - Tutorial\n  - brms\nmax-description-length: 20\nnumber-sections: true\ndraft: true\noutput:\n  html_document:\n    dev: ragg_png\nexecute:\n  message: false\n  warning: false\n---\n\n::: {#c91615f9 .cell execution_count=1}\n``` {.python .cell-code}\na = [1, 2, 3]\na\n```\n\n::: {.cell-output .cell-output-display execution_count=1}\n```\n[1, 2, 3]\n```\n:::\n:::\n\n\n",
+    "supporting": [
+      "index_files"
+    ],
+    "filters": [],
+    "includes": {}
+  }
+}
