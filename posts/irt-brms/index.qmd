@@ -35,7 +35,7 @@ This post is organized as follows:
 
 ## A Conceptual Introduction to IRT {#sec-intro}
 
-Item-Response Theory (IRT) models are a class of statistical models used to measure latent traits in individuals.[^1] These traits are characteristics which we cannot observe directly, such as height or weight, but which we instead have to infer indirectly through observed actions. For example, a student's responses to questions on an exam might give us some idea about their latent intelligence---or a politician's votes in Congress might give us some idea about their underlying political ideology.
+Item-Response Theory (IRT) models are a class of statistical models used to measure latent traits in individuals.[^1] These traits are characteristics which we cannot observe directly---such as height or weight---but which we instead have to infer indirectly through observed actions. For example, a student's responses to questions on an exam might give us some idea about their latent intelligence---or a politician's votes in Congress might give us some idea about their underlying political ideology.
 
 [^1]: IRT can also be used on non-individual units, such as organizations, but most examples use individual people.
 
@@ -49,7 +49,7 @@ $$ {#eq-0pl}
 
 Where whether each justice sides with a conservative decision ($y_{ij}$) is based probabilistically on the (scaled) proportion of conservative positions ($\theta_i$). The Standard Normal cumulative distribution function ($\Phi$) is there to add some random noise in the model. We don't want our ideology measurements to be deterministic based on past decisions. Instead, we want to allow some room for some idiosyncratic errors to occur. On even the most conservative possible decision, we allow for *some tiny* probability that Clarence Thomas takes the liberal side. The Bernoulli distribution turns the probabilities produced by the $\Phi$ function into observed 0's and 1's (liberal or conservative votes). See my [post on Probit regression models](https://www.bwilden.com/posts/probit-probit/) for more on this.
 
-The model in @eq-0pl has at least one major flaw. Because there are only parameters for justices ($\theta_i$) and none for cases, it treats all cases before the Supreme Court as interchangeable. Additive index variables such as these implicitly assume that each "item" (i.e. case) contributes the same amount of weight towards measuring the latent construct in question. In the example of the Supreme Court this is clearly a bad assumption to make since some cases clearly have more ideological importance than others.[^2]
+The model in @eq-0pl has at least one major flaw. Because there are only parameters for justices ($\theta_i$) and none for cases, it treats all cases before the Supreme Court as interchangeable. Additive index variables such as these implicitly assume that each "item" (i.e. case) contributes the same amount of weight towards measuring the latent construct in question. In the example of the Supreme Court this is a bad assumption to make because [some cases](https://www.supremecourt.gov/opinions/23pdf/23-939_e2pg.pdf) clearly have more ideological importance than others.[^2]
 
 [^2]: The no-ideological-difference-among-items assumption is pretty much always wrong, yet researchers continue to use additive index scales of latent variables in the social sciences all time. Do better! It's not that hard!
 
@@ -91,11 +91,13 @@ Now let's turn to coding up the IRT model in @eq-2pl, and use it to measure the 
 ```{r}
 #| code-fold: true
 #| code-summary: "Packages Loaded"
-library(dplyr)
-library(brms)
-library(tidybayes)
-library(ggplot2)
-library(ggdist)
+pacman::p_load(
+  "dplyr",
+  "brms",
+  "tidybayes",
+  "ggplot2",
+  "ggdist"
+)
 ```
 
 ```{css, echo=FALSE}
@@ -266,7 +268,7 @@ So what do these results say about the 3-3-3 vs 6-3 debate?[^8] Perhaps it's act
 
 ## Conclusion
 
-To conclude, pack the court.
+We should pack the Supreme Court with additional justices so that we have more data to estimate their ideology using IRT models.
 
 
 ```{r}

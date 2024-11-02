@@ -2,14 +2,14 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.4.553">
+<meta name="generator" content="quarto-1.6.32">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 <meta name="author" content="Bertrand Wilden">
 <meta name="dcterms.date" content="2024-06-13">
 
-<title>Bertrand Wilden - Practical Bayesian IRT Modeling in R</title>
+<title>Practical Bayesian IRT Modeling in R – Bertrand Wilden</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -35,7 +35,7 @@ div.sourceCode { overflow: auto; }
 }
 @media print {
 pre > code.sourceCode { white-space: pre-wrap; }
-pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+pre > code.sourceCode > span { display: inline-block; text-indent: -5em; padding-left: 5em; }
 }
 pre.numberSource code
   { counter-reset: source-line 0; }
@@ -71,10 +71,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
 <script src="../../site_libs/quarto-html/anchor.min.js"></script>
 <link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-2486e1f0a3ee9ee1fc393803a1361cdb.css" rel="stylesheet" id="quarto-text-highlighting-styles">
 <script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../../site_libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-57edb72f74794eee757c494e7311646b.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -103,7 +103,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   }
 }</script>
 
-  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
   <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
 
 <script type="text/javascript">
@@ -148,7 +148,7 @@ window.Quarto = {
     </a>
   </div>
             <div id="quarto-search" class="" title="Search"></div>
-          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
   <span class="navbar-toggler-icon"></span>
 </button>
           <div class="collapse navbar-collapse" id="navbarCollapse">
@@ -169,7 +169,7 @@ window.Quarto = {
   </li>  
 </ul>
           </div> <!-- /navcollapse -->
-          <div class="quarto-navbar-tools">
+            <div class="quarto-navbar-tools">
 </div>
       </div> <!-- /container-fluid -->
     </nav>
@@ -229,7 +229,7 @@ window.Quarto = {
 </nav>
 <div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
 <!-- margin-sidebar -->
-    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar zindex-bottom">
     </div>
 <!-- main -->
 <main class="content quarto-banner-title-block" id="quarto-document-content">
@@ -247,7 +247,7 @@ window.Quarto = {
 </ul>
 <section id="sec-intro" class="level2" data-number="1">
 <h2 data-number="1" class="anchored" data-anchor-id="sec-intro"><span class="header-section-number">1</span> A Conceptual Introduction to IRT</h2>
-<p>Item-Response Theory (IRT) models are a class of statistical models used to measure latent traits in individuals.<a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a> These traits are characteristics which we cannot observe directly, such as height or weight, but which we instead have to infer indirectly through observed actions. For example, a student’s responses to questions on an exam might give us some idea about their latent intelligence—or a politician’s votes in Congress might give us some idea about their underlying political ideology.</p>
+<p>Item-Response Theory (IRT) models are a class of statistical models used to measure latent traits in individuals.<a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a> These traits are characteristics which we cannot observe directly—such as height or weight—but which we instead have to infer indirectly through observed actions. For example, a student’s responses to questions on an exam might give us some idea about their latent intelligence—or a politician’s votes in Congress might give us some idea about their underlying political ideology.</p>
 <p>Say we want to determine where a Supreme Court justice lies on a left-right ideological scale. We will call this variable <span class="math inline">\(\theta\)</span>. One place is start would be to qualitatively code each Supreme Court decision as either being liberal (0) or conservative (1), and then look at the proportion of times each justice sided with the conservative outcome. Expressed as a statistical model we get:</p>
 <p><span id="eq-0pl"><span class="math display">\[
 \begin{aligned}
@@ -255,7 +255,7 @@ y_{ij} \sim \text{Bernoulli}(\Phi(\theta_i))
 \end{aligned}
 \tag{1}\]</span></span></p>
 <p>Where whether each justice sides with a conservative decision (<span class="math inline">\(y_{ij}\)</span>) is based probabilistically on the (scaled) proportion of conservative positions (<span class="math inline">\(\theta_i\)</span>). The Standard Normal cumulative distribution function (<span class="math inline">\(\Phi\)</span>) is there to add some random noise in the model. We don’t want our ideology measurements to be deterministic based on past decisions. Instead, we want to allow some room for some idiosyncratic errors to occur. On even the most conservative possible decision, we allow for <em>some tiny</em> probability that Clarence Thomas takes the liberal side. The Bernoulli distribution turns the probabilities produced by the <span class="math inline">\(\Phi\)</span> function into observed 0’s and 1’s (liberal or conservative votes). See my <a href="https://www.bwilden.com/posts/probit-probit/">post on Probit regression models</a> for more on this.</p>
-<p>The model in <a href="#eq-0pl" class="quarto-xref">Equation&nbsp;1</a> has at least one major flaw. Because there are only parameters for justices (<span class="math inline">\(\theta_i\)</span>) and none for cases, it treats all cases before the Supreme Court as interchangeable. Additive index variables such as these implicitly assume that each “item” (i.e.&nbsp;case) contributes the same amount of weight towards measuring the latent construct in question. In the example of the Supreme Court this is clearly a bad assumption to make since some cases clearly have more ideological importance than others.<a href="#fn2" class="footnote-ref" id="fnref2" role="doc-noteref"><sup>2</sup></a></p>
+<p>The model in <a href="#eq-0pl" class="quarto-xref">Equation&nbsp;1</a> has at least one major flaw. Because there are only parameters for justices (<span class="math inline">\(\theta_i\)</span>) and none for cases, it treats all cases before the Supreme Court as interchangeable. Additive index variables such as these implicitly assume that each “item” (i.e.&nbsp;case) contributes the same amount of weight towards measuring the latent construct in question. In the example of the Supreme Court this is a bad assumption to make because <a href="https://www.supremecourt.gov/opinions/23pdf/23-939_e2pg.pdf">some cases</a> clearly have more ideological importance than others.<a href="#fn2" class="footnote-ref" id="fnref2" role="doc-noteref"><sup>2</sup></a></p>
 <p>Let’s fix this flaw by adding a case-level parameter (<span class="math inline">\(\xi_j\)</span>) to the model:</p>
 <p><span id="eq-1pl"><span class="math display">\[
 \begin{aligned}
@@ -283,11 +283,13 @@ y_{ij} \sim \text{Bernoulli}(\Phi(\gamma_j\theta_i + \xi_j))
 <div class="cell">
 <details class="code-fold">
 <summary>Packages Loaded</summary>
-<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(dplyr)</span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(brms)</span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidybayes)</span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(ggplot2)</span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(ggdist)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>pacman<span class="sc">::</span><span class="fu">p_load</span>(</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  <span class="st">"dplyr"</span>,</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>  <span class="st">"brms"</span>,</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>  <span class="st">"tidybayes"</span>,</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>  <span class="st">"ggplot2"</span>,</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>  <span class="st">"ggdist"</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 </div>
 <div class="cell">
@@ -357,21 +359,22 @@ y_{ij} \sim \text{Bernoulli}(\Phi(\gamma_j\theta_i + \xi_j))
 <span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>  <span class="at">seed =</span> <span class="dv">555</span></span>
 <span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>Running MCMC with 4 chains, at most 8 in parallel, with 2 thread(s) per chain...
-
-Chain 4 finished in 33.1 seconds.
-Chain 1 finished in 34.5 seconds.
-Chain 2 finished in 39.3 seconds.
-Chain 3 finished in 43.8 seconds.
+<pre><code>Running MCMC with 4 chains, at most 8 in parallel, with 2 thread(s) per chain...</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Chain 3 finished in 36.1 seconds.
+Chain 1 finished in 42.1 seconds.
+Chain 4 finished in 49.1 seconds.
+Chain 2 finished in 74.9 seconds.
 
 All 4 chains finished successfully.
-Mean chain execution time: 37.7 seconds.
-Total execution time: 44.0 seconds.</code></pre>
+Mean chain execution time: 50.6 seconds.
+Total execution time: 75.1 seconds.</code></pre>
 </div>
 </div>
 <p>Let’s finally add our IRT formula, priors, and data into the <code>brm()</code> function and fit the IRT model. The <code>brm()</code> function takes these inputs and translate them in <a href="https://mc-stan.org/">Stan</a> code which is run using <code>backend = "cmdstanr"</code>.<a href="#fn7" class="footnote-ref" id="fnref7" role="doc-noteref"><sup>7</sup></a> The default four chains will sample in parallel if you set <code>cores = 4</code> or greater. Combining <code>cores = 8</code> with <code>threads = threading(2)</code> allows two of your cores to work on each chain, which can help speed up the sampling. The <code>adapt_delta = 0.99</code> and <code>max_treedepth = 15</code> options give the sampler a bit more <em>oomph</em>, to use a technical term. This will help make sure things don’t run off the rails due to identification issues during sampling—which can still creep up in IRT models despite our best efforts in setting priors.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(irt_fit)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(irt_fit)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code> Family: bernoulli 
   Links: mu = probit 
@@ -386,18 +389,18 @@ Formula: direction ~ gamma * theta + xi
 Multilevel Hyperparameters:
 ~caseId (Number of levels: 55) 
                     Estimate Est.Error l-95% CI u-95% CI Rhat Bulk_ESS Tail_ESS
-sd(gamma_Intercept)     1.64      1.11     0.31     4.59 1.00      959     1366
-sd(xi_Intercept)        2.81      0.69     1.62     4.26 1.01      355     1091
+sd(gamma_Intercept)     1.66      1.06     0.34     4.27 1.00      794     1480
+sd(xi_Intercept)        2.77      0.71     1.57     4.34 1.01      338     1106
 
 ~justiceName (Number of levels: 9) 
                     Estimate Est.Error l-95% CI u-95% CI Rhat Bulk_ESS Tail_ESS
-sd(theta_Intercept)     1.51      1.24     0.33     4.38 1.00     1566     2099
+sd(theta_Intercept)     1.47      1.06     0.35     4.27 1.00     1676     1956
 
 Regression Coefficients:
                 Estimate Est.Error l-95% CI u-95% CI Rhat Bulk_ESS Tail_ESS
-gamma_Intercept     1.07      0.72     0.20     2.91 1.00     1417     1569
-theta_Intercept    -1.02      1.10    -3.39     1.15 1.02      230      300
-xi_Intercept        0.91      0.76    -0.69     2.24 1.02      227      394
+gamma_Intercept     1.09      0.69     0.20     2.85 1.00     1336     1595
+theta_Intercept    -1.01      1.09    -3.33     1.09 1.01      262      392
+xi_Intercept        0.90      0.80    -0.86     2.30 1.02      205      375
 
 Draws were sampled using sample(hmc). For each parameter, Bulk_ESS
 and Tail_ESS are effective sample size measures, and Rhat is the potential
@@ -415,41 +418,41 @@ scale reduction factor on split chains (at convergence, Rhat = 1).</code></pre>
 <h3 data-number="2.3" class="anchored" data-anchor-id="extract-the-ideology-estimates"><span class="header-section-number">2.3</span> Extract the ideology estimates</h3>
 <p>After fitting the model and checking the sampling diagnostics we are finally ready to extract the ideology estimates (posterior distributions for <code>theta</code>) for each justice. This can be done directly in brms, but I prefer to use the <a href="https://mjskay.github.io/tidybayes/">tidybayes R package</a> because it is specifically built for working with post-estimation quantities from Bayesian models.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="fu">get_variables</span>(irt_fit)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="fu">get_variables</span>(irt_fit)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>We start by identifying the names of the parameters we’re interested in using <code>get_variables()</code>. In this case they are <code>r_justiceName__theta</code>.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>justice_draws <span class="ot">&lt;-</span> irt_fit <span class="sc">|&gt;</span> </span>
-<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">spread_draws</span>(r_justiceName__theta[justice,]) <span class="sc">|&gt;</span> </span>
-<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ungroup</span>() <span class="sc">|&gt;</span> </span>
-<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">justice =</span> <span class="fu">case_when</span>(justice <span class="sc">==</span> <span class="st">"SAAlito"</span> <span class="sc">~</span> <span class="st">"Alito"</span>,</span>
-<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>                             justice <span class="sc">==</span> <span class="st">"CThomas"</span> <span class="sc">~</span> <span class="st">"Thomas"</span>,</span>
-<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>                             justice <span class="sc">==</span> <span class="st">"NMGorsuch"</span> <span class="sc">~</span> <span class="st">"Gorsuch"</span>,</span>
-<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>                             justice <span class="sc">==</span> <span class="st">"ACBarrett"</span> <span class="sc">~</span> <span class="st">"Barrett"</span>,</span>
-<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a>                             justice <span class="sc">==</span> <span class="st">"JGRoberts"</span> <span class="sc">~</span> <span class="st">"Roberts"</span>,</span>
-<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a>                             justice <span class="sc">==</span> <span class="st">"BMKavanaugh"</span> <span class="sc">~</span> <span class="st">"Kavanaugh"</span>,</span>
-<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a>                             justice <span class="sc">==</span> <span class="st">"KBJackson"</span> <span class="sc">~</span> <span class="st">"Jackson"</span>,</span>
-<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a>                             justice <span class="sc">==</span> <span class="st">"EKagan"</span> <span class="sc">~</span> <span class="st">"Kagan"</span>,</span>
-<span id="cb12-12"><a href="#cb12-12" aria-hidden="true" tabindex="-1"></a>                             justice <span class="sc">==</span> <span class="st">"SSotomayor"</span> <span class="sc">~</span> <span class="st">"Sotomayor"</span>),</span>
-<span id="cb12-13"><a href="#cb12-13" aria-hidden="true" tabindex="-1"></a>         <span class="at">theta =</span> r_justiceName__theta,</span>
-<span id="cb12-14"><a href="#cb12-14" aria-hidden="true" tabindex="-1"></a>         <span class="at">justice =</span> forcats<span class="sc">::</span><span class="fu">fct_reorder</span>(justice, theta))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>justice_draws <span class="ot">&lt;-</span> irt_fit <span class="sc">|&gt;</span> </span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">spread_draws</span>(r_justiceName__theta[justice,]) <span class="sc">|&gt;</span> </span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ungroup</span>() <span class="sc">|&gt;</span> </span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">justice =</span> <span class="fu">case_when</span>(justice <span class="sc">==</span> <span class="st">"SAAlito"</span> <span class="sc">~</span> <span class="st">"Alito"</span>,</span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>                             justice <span class="sc">==</span> <span class="st">"CThomas"</span> <span class="sc">~</span> <span class="st">"Thomas"</span>,</span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>                             justice <span class="sc">==</span> <span class="st">"NMGorsuch"</span> <span class="sc">~</span> <span class="st">"Gorsuch"</span>,</span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>                             justice <span class="sc">==</span> <span class="st">"ACBarrett"</span> <span class="sc">~</span> <span class="st">"Barrett"</span>,</span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a>                             justice <span class="sc">==</span> <span class="st">"JGRoberts"</span> <span class="sc">~</span> <span class="st">"Roberts"</span>,</span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a>                             justice <span class="sc">==</span> <span class="st">"BMKavanaugh"</span> <span class="sc">~</span> <span class="st">"Kavanaugh"</span>,</span>
+<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a>                             justice <span class="sc">==</span> <span class="st">"KBJackson"</span> <span class="sc">~</span> <span class="st">"Jackson"</span>,</span>
+<span id="cb13-11"><a href="#cb13-11" aria-hidden="true" tabindex="-1"></a>                             justice <span class="sc">==</span> <span class="st">"EKagan"</span> <span class="sc">~</span> <span class="st">"Kagan"</span>,</span>
+<span id="cb13-12"><a href="#cb13-12" aria-hidden="true" tabindex="-1"></a>                             justice <span class="sc">==</span> <span class="st">"SSotomayor"</span> <span class="sc">~</span> <span class="st">"Sotomayor"</span>),</span>
+<span id="cb13-13"><a href="#cb13-13" aria-hidden="true" tabindex="-1"></a>         <span class="at">theta =</span> r_justiceName__theta,</span>
+<span id="cb13-14"><a href="#cb13-14" aria-hidden="true" tabindex="-1"></a>         <span class="at">justice =</span> forcats<span class="sc">::</span><span class="fu">fct_reorder</span>(justice, theta))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>Draws from the posterior distribution for each justice’s <code>r_justiceName__theta</code> can be extracted using tidybayes’s <code>spread_draws()</code> function. The <code>[justice,]</code> part gives us draws for each justice and names the new variable distinguishing justices as <code>justice</code>. In this code chunk we also rename the justices to only their last name, and we reorder them by their median <code>theta</code> value using <code>forcats::fct_reorder()</code>.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>p <span class="ot">&lt;-</span> justice_draws <span class="sc">|&gt;</span> </span>
-<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> theta, </span>
-<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>             <span class="at">y =</span> justice)) <span class="sc">+</span></span>
-<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">stat_slabinterval</span>(<span class="fu">aes</span>(<span class="at">fill_ramp =</span> <span class="fu">after_stat</span>(x)),</span>
-<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>                    <span class="at">fill =</span> <span class="st">"green"</span>,</span>
-<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>                    <span class="at">density =</span> <span class="st">"unbounded"</span>,</span>
-<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>                    <span class="at">alpha =</span> .<span class="dv">75</span>) <span class="sc">+</span></span>
-<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_fill_ramp_continuous</span>(<span class="at">from =</span> <span class="st">"blue"</span>, <span class="at">guide =</span> <span class="st">"none"</span>) <span class="sc">+</span></span>
-<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">xlim</span>(<span class="fu">c</span>(<span class="sc">-</span><span class="fl">3.5</span>, <span class="fl">3.5</span>)) <span class="sc">+</span></span>
-<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="fu">expression</span>(<span class="st">"Idealology Estimate,"</span> <span class="sc">~</span> theta), </span>
-<span id="cb13-11"><a href="#cb13-11" aria-hidden="true" tabindex="-1"></a>       <span class="at">y =</span> <span class="st">""</span>, </span>
-<span id="cb13-12"><a href="#cb13-12" aria-hidden="true" tabindex="-1"></a>       <span class="at">title =</span> <span class="st">"Supreme Court Justice IRT Model Results"</span>,</span>
-<span id="cb13-13"><a href="#cb13-13" aria-hidden="true" tabindex="-1"></a>       <span class="at">subtitle =</span> <span class="st">"2022 Term"</span>) <span class="sc">+</span></span>
-<span id="cb13-14"><a href="#cb13-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>p <span class="ot">&lt;-</span> justice_draws <span class="sc">|&gt;</span> </span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> theta, </span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>             <span class="at">y =</span> justice)) <span class="sc">+</span></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">stat_slabinterval</span>(<span class="fu">aes</span>(<span class="at">fill_ramp =</span> <span class="fu">after_stat</span>(x)),</span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>                    <span class="at">fill =</span> <span class="st">"green"</span>,</span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>                    <span class="at">density =</span> <span class="st">"unbounded"</span>,</span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a>                    <span class="at">alpha =</span> .<span class="dv">75</span>) <span class="sc">+</span></span>
+<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_fill_ramp_continuous</span>(<span class="at">from =</span> <span class="st">"blue"</span>, <span class="at">guide =</span> <span class="st">"none"</span>) <span class="sc">+</span></span>
+<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">xlim</span>(<span class="fu">c</span>(<span class="sc">-</span><span class="fl">3.5</span>, <span class="fl">3.5</span>)) <span class="sc">+</span></span>
+<span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="fu">expression</span>(<span class="st">"Idealology Estimate,"</span> <span class="sc">~</span> theta), </span>
+<span id="cb14-11"><a href="#cb14-11" aria-hidden="true" tabindex="-1"></a>       <span class="at">y =</span> <span class="st">""</span>, </span>
+<span id="cb14-12"><a href="#cb14-12" aria-hidden="true" tabindex="-1"></a>       <span class="at">title =</span> <span class="st">"Supreme Court Justice IRT Model Results"</span>,</span>
+<span id="cb14-13"><a href="#cb14-13" aria-hidden="true" tabindex="-1"></a>       <span class="at">subtitle =</span> <span class="st">"2022 Term"</span>) <span class="sc">+</span></span>
+<span id="cb14-14"><a href="#cb14-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>The <a href="https://mjskay.github.io/ggdist/">ggdist R package</a> contains many excellent options for graphing distributions of values and plays very nicely with tidybayes (Matthew Kay is the author of both packages). In this case we’ll use <code>slab_interval()</code> to show us the full posterior distribution for <code>theta</code>, along with median and 66% + 95% intervals.</p>
 <div class="cell">
@@ -472,9 +475,9 @@ scale reduction factor on split chains (at convergence, Rhat = 1).</code></pre>
 </section>
 <section id="conclusion" class="level2" data-number="4">
 <h2 data-number="4" class="anchored" data-anchor-id="conclusion"><span class="header-section-number">4</span> Conclusion</h2>
-<p>To conclude, pack the court.</p>
+<p>We should pack the Supreme Court with additional justices so that we have more data to estimate their ideology using IRT models.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sessionInfo</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sessionInfo</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>R version 4.4.0 (2024-04-24)
 Platform: aarch64-apple-darwin20
@@ -494,39 +497,40 @@ attached base packages:
 [1] stats     graphics  grDevices utils     datasets  methods   base     
 
 other attached packages:
-[1] rstan_2.35.0.9000       StanHeaders_2.35.0.9000 ggdist_3.3.2           
+[1] rstan_2.32.6            StanHeaders_2.35.0.9000 ggdist_3.3.2           
 [4] ggplot2_3.5.1           tidybayes_3.0.6         brms_2.21.6            
-[7] Rcpp_1.0.12             dplyr_1.1.4            
+[7] Rcpp_1.0.13             dplyr_1.1.4            
 
 loaded via a namespace (and not attached):
  [1] svUnit_1.0.6          tidyselect_1.2.1      farver_2.1.2         
- [4] loo_2.8.0.9000        fastmap_1.1.1         tensorA_0.36.2.1     
- [7] digest_0.6.36         lifecycle_1.0.4       processx_3.8.4       
-[10] magrittr_2.0.3        posterior_1.6.0       compiler_4.4.0       
-[13] rlang_1.1.4           tools_4.4.0           utf8_1.2.4           
-[16] yaml_2.3.8            data.table_1.15.4     knitr_1.47           
-[19] labeling_0.4.3        bridgesampling_1.1-2  htmlwidgets_1.6.4    
-[22] bit_4.0.5             pkgbuild_1.4.4        curl_5.2.1           
-[25] here_1.0.1            plyr_1.8.9            cmdstanr_0.8.0.9000  
-[28] abind_1.4-5           withr_3.0.0           purrr_1.0.2          
-[31] grid_4.4.0            stats4_4.4.0          fansi_1.0.6          
-[34] colorspace_2.1-0      inline_0.3.19         scales_1.3.0         
-[37] cli_3.6.3             mvtnorm_1.2-5         rmarkdown_2.26       
-[40] crayon_1.5.2          generics_0.1.3        RcppParallel_5.1.8   
-[43] rstudioapi_0.16.0     reshape2_1.4.4        tzdb_0.4.0           
-[46] stringr_1.5.1         bayesplot_1.11.1.9000 parallel_4.4.0       
-[49] matrixStats_1.3.0     vctrs_0.6.5           V8_4.4.2             
-[52] Matrix_1.7-0          jsonlite_1.8.8        hms_1.1.3            
-[55] arrayhelpers_1.1-0    bit64_4.0.5           tidyr_1.3.1          
-[58] glue_1.7.0            codetools_0.2-20      ps_1.7.7             
-[61] distributional_0.4.0  stringi_1.8.4         gtable_0.3.5         
-[64] QuickJSR_1.3.0        munsell_0.5.1         tibble_3.2.1         
-[67] pillar_1.9.0          htmltools_0.5.8.1     Brobdingnag_1.2-9    
-[70] R6_2.5.1              rprojroot_2.0.4       vroom_1.6.5          
-[73] evaluate_0.23         lattice_0.22-6        readr_2.1.5          
-[76] backports_1.5.0       rstantools_2.4.0.9000 coda_0.19-4.1        
-[79] gridExtra_2.3         nlme_3.1-164          checkmate_2.3.1      
-[82] xfun_0.44             forcats_1.0.0         pkgconfig_2.0.3      </code></pre>
+ [4] loo_2.8.0.9000        fastmap_1.2.0         tensorA_0.36.2.1     
+ [7] pacman_0.5.1          digest_0.6.37         lifecycle_1.0.4      
+[10] processx_3.8.4        magrittr_2.0.3        posterior_1.6.0      
+[13] compiler_4.4.0        rlang_1.1.4           tools_4.4.0          
+[16] utf8_1.2.4            yaml_2.3.10           data.table_1.15.4    
+[19] knitr_1.48            labeling_0.4.3        bridgesampling_1.1-2 
+[22] htmlwidgets_1.6.4     bit_4.0.5             pkgbuild_1.4.4       
+[25] curl_5.2.1            here_1.0.1            plyr_1.8.9           
+[28] cmdstanr_0.8.0.9000   abind_1.4-8           withr_3.0.1          
+[31] purrr_1.0.2           grid_4.4.0            stats4_4.4.0         
+[34] fansi_1.0.6           colorspace_2.1-1      inline_0.3.19        
+[37] scales_1.3.0          cli_3.6.3             mvtnorm_1.3-1        
+[40] rmarkdown_2.28        crayon_1.5.3          generics_0.1.3       
+[43] RcppParallel_5.1.8    rstudioapi_0.16.0     reshape2_1.4.4       
+[46] tzdb_0.4.0            stringr_1.5.1         bayesplot_1.11.1.9000
+[49] parallel_4.4.0        matrixStats_1.3.0     vctrs_0.6.5          
+[52] V8_4.4.2              Matrix_1.7-0          jsonlite_1.8.9       
+[55] hms_1.1.3             arrayhelpers_1.1-0    bit64_4.0.5          
+[58] tidyr_1.3.1           glue_1.8.0            codetools_0.2-20     
+[61] ps_1.8.0              distributional_0.4.0  stringi_1.8.4        
+[64] gtable_0.3.5          QuickJSR_1.3.0        munsell_0.5.1        
+[67] tibble_3.2.1          pillar_1.9.0          htmltools_0.5.8.1    
+[70] Brobdingnag_1.2-9     R6_2.5.1              rprojroot_2.0.4      
+[73] vroom_1.6.5           evaluate_1.0.1        lattice_0.22-6       
+[76] readr_2.1.5           backports_1.5.0       rstantools_2.4.0.9000
+[79] coda_0.19-4.1         gridExtra_2.3         nlme_3.1-164         
+[82] checkmate_2.3.1       xfun_0.48             forcats_1.0.0        
+[85] pkgconfig_2.0.3      </code></pre>
 </div>
 </div>
 
@@ -582,18 +586,7 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
     }
     return false;
   }
-  const clipboard = new window.ClipboardJS('.code-copy-button', {
-    text: function(trigger) {
-      const codeEl = trigger.previousElementSibling.cloneNode(true);
-      for (const childEl of codeEl.children) {
-        if (isCodeAnnotation(childEl)) {
-          childEl.remove();
-        }
-      }
-      return codeEl.innerText;
-    }
-  });
-  clipboard.on('success', function(e) {
+  const onCopySuccess = function(e) {
     // button target
     const button = e.trigger;
     // don't keep focus
@@ -625,7 +618,29 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
     }, 1000);
     // clear code selection
     e.clearSelection();
+  }
+  const getTextToCopy = function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+    text: getTextToCopy
   });
+  clipboard.on('success', onCopySuccess);
+  if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+    // For code content inside modals, clipBoardJS needs to be initialized with a container option
+    // TODO: Check when it could be a function (https://github.com/zenorocha/clipboard.js/issues/860)
+    const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+      text: getTextToCopy,
+      container: window.document.getElementById('quarto-embedded-source-code-modal')
+    });
+    clipboardModal.on('success', onCopySuccess);
+  }
     var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
     var mailtoRegex = new RegExp(/^mailto:/);
       var filterRegex = new RegExp("https:\/\/www\.bwilden\.com");
@@ -633,7 +648,7 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
         return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
     }
     // Inspect non-navigation links and adorn them if external
- 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool)');
+ 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
     for (var i=0; i<links.length; i++) {
       const link = links[i];
       if (!isInternal(link.href)) {
