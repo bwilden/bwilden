@@ -1,0 +1,36 @@
+---
+title: "Hierarchical Changepoint Modeling in PyMC"
+author: "Bertrand Wilden"
+date: "2024-06-13"
+categories: [Bayes, Tutorial, Python]
+max-description-length: 20
+number-sections: true
+draft: true
+output:
+  html_document:
+    dev: ragg_png
+execute: 
+  message: false
+  warning: false
+---
+
+```{r}
+library(reticulate)
+use_condaenv("r-reticulate")
+```
+
+
+```{python}
+import PyMC as pm
+
+mod = pm.Model()
+with mod:
+    T = pm.Uniform('changepoint', 1860, 1960)    
+    μ = pm.HalfNormal('μ', sd=4, shape=2)
+    grp = (coal['date'].values > T) * 1
+    y_obs = pm.Normal('y_obs', mu=μ[grp], observed = coal['count'].values)
+
+```
+
+
+

@@ -1,0 +1,17 @@
+{
+  "hash": "0fc52a8aadad9de22be7c3e086f36e92",
+  "result": {
+    "engine": "knitr",
+    "markdown": "---\ntitle: \"Hierarchical Changepoint Modeling in PyMC\"\nauthor: \"Bertrand Wilden\"\ndate: \"2024-06-13\"\ncategories: [Bayes, Tutorial, Python]\nmax-description-length: 20\nnumber-sections: true\ndraft: true\noutput:\n  html_document:\n    dev: ragg_png\nexecute: \n  message: false\n  warning: false\n---\n\n::: {.cell}\n\n```{.r .cell-code}\nlibrary(reticulate)\nuse_condaenv(\"r-reticulate\")\n```\n:::\n\n::: {.cell}\n\n```{.python .cell-code}\nimport pymc as pm\nimport matplotlib.pyplot as plt\nimport numpy as np\nfrom collections import Counter\n```\n:::\n\n::: {.cell}\n\n```{.python .cell-code}\nT = 50\nnoise_sd = 0.15\nn_changepoints = 4\ntrue_cp = np.sort(np.random.choice(T, size=n_changepoints))\noffsets_per_period = np.random.randn(n_changepoints)\n\nnoiseless = np.zeros(T)\nstart_time = 0\n\nfor changepoint, offset in zip(true_cp, offsets_per_period):\n  noiseless[start_time:changepoint] += offset\n  start_time = changepoint\n\nxs = noiseless + np.random.randn(T) * noise_sd\n```\n:::\n\n::: {.cell}\n\n```{.python .cell-code}\nxs\n```\n\n::: {.cell-output .cell-output-stdout}\n\n```\narray([-0.55743222, -0.42158181, -0.3169285 , -0.45441439, -0.33557658,\n        1.30213509,  1.49818527,  1.31972495,  1.121997  ,  1.57456328,\n        1.56595054,  1.30029582,  1.10605233,  1.331188  ,  1.48108881,\n        1.48847598,  1.24433077,  1.28400716,  1.26327083,  1.31588658,\n        1.5112895 ,  1.59516837, -1.30072018, -1.37379336, -1.11570435,\n       -1.17791403, -1.05366688, -1.431819  , -1.15953865, -1.2148288 ,\n       -1.50323716, -1.04484617,  1.30404895,  1.04140356,  1.16026761,\n        1.45309153,  1.47190392,  1.473904  ,  0.96137055,  1.22405199,\n        1.35782398,  1.48358579,  1.20626053,  1.51229713,  1.2780514 ,\n        1.28211078,  1.16340562,  0.19062005,  0.13376479,  0.00939612])\n```\n\n\n:::\n:::\n",
+    "supporting": [
+      "index_files"
+    ],
+    "filters": [
+      "rmarkdown/pagebreak.lua"
+    ],
+    "includes": {},
+    "engineDependencies": {},
+    "preserve": {},
+    "postProcess": true
+  }
+}
