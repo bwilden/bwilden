@@ -8,13 +8,14 @@ website:
   navbar:
     right:
       - blog.qmd
+      - nyc-rat-index.qmd
       - icon: github
         href: https://github.com/bwilden
       - icon: rss
         href: https://www.bwilden.com/blog.xml
 format:
   html:
-    theme: flatly
+    theme: yeti
     css: styles.css
 
 

@@ -2,7 +2,7 @@
 title: "The NYC Rat Index"
 author: "Bertrand Wilden"
 date: "2024-05-29"
-categories: [Bayes, GIS]
+categories: [Bayes, GIS, R]
 max-description-length: 20
 draft: false
 execute: 
@@ -12,22 +12,24 @@ execute:
 
 Rats are "public enemy number one"---at least according to New York City Mayor Eric Adams. Last year the city established a "[Rat Czar](https://www.nyc.gov/office-of-the-mayor/news/249-23/mayor-adams-anoints-kathleen-corradi-nyc-s-first-ever-rat-czar-#/0)" who has been tasked with detecting and exterminating rat populations across the five boroughs. While I respect the lives all creatures great and small, mapping out the concentration of rats in the city seems like a worthwhile public service.
 
-In this project I develop the *NYC Rat Index* using geospatial analysis in R. We will walk through some GIS wrangling steps and then employ Bayesian modeling to measure rat activity across New York. Use these results to figure out which neighborhoods to avoid---or which to seek out---depending on your overall disposition towards wild rodents.
+In this project I develop the **NYC Rat Index** using geospatial analysis in R. We will walk through some GIS wrangling steps and then employ Bayesian modeling to measure rat activity across New York. Use these results to figure out which neighborhoods to avoid---or which to seek out---depending on your overall disposition towards wild rodents.
 
 ```{r}
 #| code-fold: true
 #| code-summary: "Packages Loaded"
-library(dplyr)
-library(lubridate)
-library(tidyr)
-library(tidycensus)
-library(purrr)
-library(ggplot2)
-library(MetBrewer)
-library(spdep)
-library(sf)
-library(INLA)
-library(leaflet)
+pacman::p_load(
+  "dplyr",
+  "lubridate",
+  "tidyr",
+  "tidycensus",
+  "purrr",
+  "ggplot2",
+  "MetBrewer",
+  "spdep",
+  "sf",
+  "INLA",
+  "leaflet"
+)
 ```
 
 ```{css, echo=FALSE}
@@ -71,7 +73,7 @@ rats_zip <- rats |>
   filter(year %in% data_years, !is.na(borough))
 ```
 
-Let's start by creating a new data frame, `rats_zip`, which collapses the number of rat activity observations (`n_rats`) down to the ZIP code-year level. We'll use ZIP code as the level of spatial aggregation because most people know which ZIP code they live in (as opposed to Census tract or other designation). This will make it easier for New Yorkers to know the *Rat Index* value where they live. The downside of using ZIP codes, however, is that they are constructed to facilitate mail delivery---not balanced geospatial analysis.[^1]
+Let's start by creating a new data frame, `rats_zip`, which collapses the number of rat activity observations (`n_rats`) down to the ZIP code-year level. We'll use ZIP code as the level of spatial aggregation because most people know which ZIP code they live in (as opposed to Census tract or other designation). This will make it easier for New Yorkers to know the **Rat Index** value where they live. The downside of using ZIP codes, however, is that they are constructed to facilitate mail delivery---not balanced geospatial analysis.[^1]
 
 [^1]: In Manhattan, [42 *buildings*](https://convene.com/catalyst/office/buildings-new-york-city-own-zip-code/) have their own ZIP code.
 
@@ -221,7 +223,7 @@ Plotting these two graphs on top of each other confirms that we fully connected 
 
 # Modeling the Rats
 
-Let's return to the ZIP-year level data, `rats_all` for constructing the *Rat Index*.
+Let's return to the ZIP-year level data, `rats_all` for constructing the **Rat Index**.
 
 ```{r}
 zips_adj_long <- rats_all |> 
@@ -263,6 +265,11 @@ rat_scores <- rats_all |>
   mutate(log_rat_score = log10(rat_score),
          zip_rat_rank = as.integer(as.factor(-log_rat_score)),
          zip_rat_perc = percent_rank(-zip_rat_rank))
+```
+
+```{r}
+#| echo: false
+readr::write_csv(rat_scores, here::here("data", "rat_scores.csv"))
 ```
 
 The predicted rat activity can be extracted from the fitted model using `rat_mod$summary.fitted.values`. Mean, median, and mode of these posterior values are all about the same, so we'll save `$mode` as our new `rat_score` variable. Because `rat_mod` uses the time-series data, we will aggregate rat scores across years down to the ZIP code level. Rat activity is highly skewed, so for plotting purposes we'll use `log_rat_score`. And we'll also create rat index rank and percentile variables so that we can find the biggest rat hot-spots in the city.
