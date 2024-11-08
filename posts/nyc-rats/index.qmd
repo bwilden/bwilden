@@ -269,7 +269,9 @@ rat_scores <- rats_all |>
 
 ```{r}
 #| echo: false
-readr::write_csv(rat_scores, here::here("data", "rat_scores.csv"))
+st_write(rat_scores, 
+         here::here("data", "rat_scores.shp"),
+         append = FALSE)
 ```
 
 The predicted rat activity can be extracted from the fitted model using `rat_mod$summary.fitted.values`. Mean, median, and mode of these posterior values are all about the same, so we'll save `$mode` as our new `rat_score` variable. Because `rat_mod` uses the time-series data, we will aggregate rat scores across years down to the ZIP code level. Rat activity is highly skewed, so for plotting purposes we'll use `log_rat_score`. And we'll also create rat index rank and percentile variables so that we can find the biggest rat hot-spots in the city.

@@ -2,6 +2,69 @@
 title: "The NYC Rat Index"
 page-layout: full
 title-block-banner: true
+execute: 
+  message: false
+  warning: false
+  echo: false
 ---
 
-The NYC Rat Index
+```{r}
+pacman::p_load(
+  "leaflet",
+  "tibble",
+  "sf"
+)
+```
+
+
+```{r}
+rat_scores <- st_read(
+  here::here("data", "rat_scores.shp"),
+  quiet = TRUE
+  ) |> 
+  as_tibble()
+
+pal <- colorNumeric(
+  palette = "plasma",
+  domain = rat_scores$log_rat_score
+)
+
+l <- st_as_sf(rat_scores) |> 
+  st_transform(crs = "WGS84") |> 
+  leaflet() |> 
+  addTiles()
+
+labels <- sprintf(
+  "<strong> ZIP Code: %s </strong> <br/>
+  Rat Index: %s <br/> Percentile: %s",
+  rat_scores$zip_cod,
+  round(rat_scores$rat_scr, 2),
+  round(rat_scores$zp_rt_p, 3)
+) |>
+  lapply(htmltools::HTML)
+
+l |> 
+  addPolygons(
+    smoothFactor = .1, 
+    fillOpacity = .8,
+    fillColor = ~pal(rat_scr),
+    weight = .1,
+    highlightOptions = highlightOptions(weight = 5, color = "white"),
+    label = labels,
+    labelOptions = labelOptions(
+      style = list(
+        "font-weight" = "normal",
+        padding = "3px 8px"
+      ),
+      textsize = "15px", direction = "auto"
+    )
+  ) |> 
+  addLegend(
+    pal = pal,
+    values = ~rat_scr, 
+    opacity = 1,
+    title = "Rat Index", 
+    position = "bottomright"
+  )
+```
+

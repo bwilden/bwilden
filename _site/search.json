@@ -284,6 +284,6 @@
     "href": "nyc-rat-index.html",
     "title": "The NYC Rat Index",
     "section": "",
-    "text": "The NYC Rat Index"
+    "text": "Reading layer `rat_scores' from data source \n  `/Users/bertrandwilden/Documents/bwilden/data/rat_scores.shp' \n  using driver `ESRI Shapefile'\nSimple feature collection with 194 features and 6 fields\nGeometry type: MULTIPOLYGON\nDimension:     XY\nBounding box:  xmin: -74.25571 ymin: 40.49604 xmax: -73.6513 ymax: 40.91528\nGeodetic CRS:  NAD83"
   }
 ]
