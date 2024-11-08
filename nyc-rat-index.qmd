@@ -1,6 +1,6 @@
 ---
 title: "The NYC Rat Index"
-page-layout: full
+page-layout: article
 title-block-banner: true
 execute: 
   message: false
@@ -16,7 +16,7 @@ pacman::p_load(
 )
 ```
 
-Full post and methodology [here](https://www.bwilden.com/posts/nyc-rats/).
+Full blog post and methodology [here](https://www.bwilden.com/posts/nyc-rats/).
 
 
 ```{r}

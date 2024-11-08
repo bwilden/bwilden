@@ -8,7 +8,7 @@ website:
   navbar:
     right:
       - blog.qmd
-      - nyc_rat_index.qmd
+      - nyc-rat-index.qmd
       - icon: github
         href: https://github.com/bwilden
       - icon: rss
