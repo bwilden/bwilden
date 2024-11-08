@@ -13,10 +13,9 @@ website:
         href: https://github.com/bwilden
       - icon: rss
         href: https://www.bwilden.com/blog.xml
+        
 format:
   html:
-    theme: yeti
-    css: styles.css
-
+    theme: cosmo
 
 

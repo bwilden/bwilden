@@ -16,8 +16,7 @@ pacman::p_load(
 )
 ```
 
-Full blog post and methodology [here](https://www.bwilden.com/posts/nyc-rats/).
-
+Rat hot-spots in New York City. The scale displays each ZIP code's percentile on the Rat Index. Full blog post and methodology [here](https://www.bwilden.com/posts/nyc-rats/).
 
 ```{r}
 rat_scores <- st_read(
@@ -28,7 +27,7 @@ rat_scores <- st_read(
 
 pal <- colorNumeric(
   palette = "plasma",
-  domain = rat_scores$log_rat_score
+  domain = rat_scores$zp_rt_p
 )
 
 l <- st_as_sf(rat_scores) |> 
@@ -49,7 +48,7 @@ l |>
   addPolygons(
     smoothFactor = .1, 
     fillOpacity = .8,
-    fillColor = ~pal(rat_scr),
+    fillColor = ~pal(zp_rt_p),
     weight = .1,
     highlightOptions = highlightOptions(weight = 5, color = "white"),
     label = labels,
@@ -63,10 +62,12 @@ l |>
   ) |> 
   addLegend(
     pal = pal,
-    values = ~rat_scr, 
+    values = ~zp_rt_p, 
     opacity = 1,
     title = "Rat Index", 
     position = "bottomright"
-  )
+  ) |> 
+  addProviderTiles(providers$CartoDB.Positron)
 ```
+
 

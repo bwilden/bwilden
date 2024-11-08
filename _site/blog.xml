@@ -2390,7 +2390,7 @@ font-style: inherit;">log</span>(prop_stro))</span></code></pre></div>
 <p>Then we can calculate tract-level STRO proportions by dividing the total_licenses by the total_housing_units. We also want to generate a variable for the log of this proportion. As Figure&nbsp;1 shows, STRO licenses are heavily skewed towards certain neighborhoods. Up to 38.7% of housing units in some beach areas of San Diego are devoted to STROs, whereas I’m not sure why anyone would want to rent an Airbnb in Kearny Mesa. Taking the natural log of our STRO proportion variable will help show distinctions much more clearly when it comes to making the choropleth map.</p>
 <div class="cell">
 <div class="cell-output-display">
-<div id="fig-dist-stros" class="quarto-figure quarto-figure-center quarto-float anchored">
+<div id="fig-dist-stros" class="quarto-float quarto-figure quarto-figure-center anchored">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-dist-stros-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 <img src="https://www.bwilden.com/posts/sd-stro/index_files/figure-html/fig-dist-stros-1.png" class="img-fluid figure-img" width="672">
@@ -2529,7 +2529,7 @@ font-style: inherit;">"grey"</span>)</span></code></pre></div>
 background-color: null;
 font-style: inherit;">make_log_prop_stro_map</span>(sd)</span></code></pre></div>
 <div class="cell-output-display">
-<div id="fig-sd-county" class="quarto-figure quarto-figure-center quarto-float anchored">
+<div id="fig-sd-county" class="quarto-float quarto-figure quarto-figure-center anchored">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-sd-county-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 <img src="https://www.bwilden.com/posts/sd-stro/index_files/figure-html/fig-sd-county-1.png" class="img-fluid figure-img" width="672">
@@ -2553,7 +2553,7 @@ font-style: inherit;">+</span></span>
 background-color: null;
 font-style: inherit;">theme_bw</span>()</span></code></pre></div>
 <div class="cell-output-display">
-<div id="fig-sd-county-bw" class="quarto-figure quarto-figure-center quarto-float anchored">
+<div id="fig-sd-county-bw" class="quarto-float quarto-figure quarto-figure-center anchored">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-sd-county-bw-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 <img src="https://www.bwilden.com/posts/sd-stro/index_files/figure-html/fig-sd-county-bw-1.png" class="img-fluid figure-img" width="672">
@@ -2632,7 +2632,7 @@ font-style: inherit;">32.67</span>)</span></code></pre></div>
 background-color: null;
 font-style: inherit;">compose</span>(make_log_prop_stro_map, st_crop_sd)(sd)</span></code></pre></div>
 <div class="cell-output-display">
-<div id="fig-sd-city" class="quarto-figure quarto-figure-center quarto-float anchored">
+<div id="fig-sd-city" class="quarto-float quarto-figure quarto-figure-center anchored">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-sd-city-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 <img src="https://www.bwilden.com/posts/sd-stro/index_files/figure-html/fig-sd-city-1.png" class="img-fluid figure-img" width="672">
@@ -2650,7 +2650,7 @@ Figure&nbsp;4: San Diego City
 background-color: null;
 font-style: inherit;">compose</span>(make_log_prop_stro_map, st_crop_central_sd)(sd)</span></code></pre></div>
 <div class="cell-output-display">
-<div id="fig-sd-central" class="quarto-figure quarto-figure-center quarto-float anchored">
+<div id="fig-sd-central" class="quarto-float quarto-figure quarto-figure-center anchored">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-sd-central-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 <img src="https://www.bwilden.com/posts/sd-stro/index_files/figure-html/fig-sd-central-1.png" class="img-fluid figure-img" width="672">

@@ -1,12 +1,5 @@
 [
   {
-    "listing": "/index.html",
-    "items": [
-      "/posts/probit-probit/index.html",
-      "/posts/president-height/index.html"
-    ]
-  },
-  {
     "listing": "/blog.html",
     "items": [
       "/posts/irt-brms/index.html",
@@ -14,18 +7,6 @@
       "/posts/sd-stro/index.html",
       "/posts/probit-probit/index.html",
       "/posts/president-height/index.html"
-    ]
-  },
-  {
-    "listing": "/nyc-rat-index.html",
-    "items": [
-      "/index.html",
-      "/blog.html",
-      "/posts/president-height/index.html",
-      "/posts/sd-stro/index.html",
-      "/posts/irt-brms/index.html",
-      "/posts/probit-probit/index.html",
-      "/posts/nyc-rats/index.html"
     ]
   }
 ]
