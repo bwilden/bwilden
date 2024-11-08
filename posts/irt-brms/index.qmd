@@ -2,7 +2,7 @@
 title: "Practical Bayesian IRT Modeling in R"
 author: "Bertrand Wilden"
 date: "2024-06-13"
-categories: [Bayes, Tutorial, brms]
+categories: [Bayes, Tutorial, brms, R]
 max-description-length: 20
 number-sections: true
 draft: false

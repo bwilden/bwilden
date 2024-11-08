@@ -2,7 +2,7 @@
 title: "Mapping Airbnbs in San Diego"
 author: "Bertrand Wilden"
 date: "2023-07-31"
-categories: [GIS, Tutorial]
+categories: [GIS, Tutorial, R]
 max-description-length: 20
 draft: false
 ---

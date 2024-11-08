@@ -729,6 +729,7 @@ loaded via a namespace (and not attached):
   <category>Bayes</category>
   <category>Tutorial</category>
   <category>brms</category>
+  <category>R</category>
   <guid>https://www.bwilden.com/posts/irt-brms/</guid>
   <pubDate>Thu, 13 Jun 2024 07:00:00 GMT</pubDate>
 </item>
@@ -2768,6 +2769,7 @@ loaded via a namespace (and not attached):
 </section></div> ]]></description>
   <category>GIS</category>
   <category>Tutorial</category>
+  <category>R</category>
   <guid>https://www.bwilden.com/posts/sd-stro/</guid>
   <pubDate>Mon, 31 Jul 2023 07:00:00 GMT</pubDate>
 </item>
@@ -3887,6 +3889,7 @@ loaded via a namespace (and not attached):
   <category>Bayes</category>
   <category>brms</category>
   <category>Tutorial</category>
+  <category>R</category>
   <guid>https://www.bwilden.com/posts/probit-probit/</guid>
   <pubDate>Wed, 21 Jun 2023 07:00:00 GMT</pubDate>
 </item>
@@ -4859,6 +4862,7 @@ loaded via a namespace (and not attached):
 
  ]]></description>
   <category>Bayes</category>
+  <category>R</category>
   <guid>https://www.bwilden.com/posts/president-height/</guid>
   <pubDate>Tue, 09 Aug 2022 07:00:00 GMT</pubDate>
   <media:content url="https://www.bwilden.com/posts/president-height/abrahamlincolngenerals.jpeg" medium="image" type="image/jpeg"/>

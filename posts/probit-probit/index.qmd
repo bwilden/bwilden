@@ -2,7 +2,7 @@
 title: "Probing the Depths of Probit Regression"
 author: "Bertrand Wilden"
 date: "2023-06-21"
-categories: [Bayes, brms, Tutorial]
+categories: [Bayes, brms, Tutorial, R]
 max-description-length: 20
 ---
 

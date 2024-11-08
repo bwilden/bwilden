@@ -2,7 +2,7 @@
 title: "Does Height Matter When Running for President?"
 author: "Bertrand Wilden"
 date: "2022-08-09"
-categories: [Bayes]
+categories: [Bayes, R]
 image: abrahamlincolngenerals.jpeg
 max-description-length: 20
 ---

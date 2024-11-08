@@ -4,14 +4,14 @@
     "href": "blog.html",
     "title": "Blog",
     "section": "",
-    "text": "Practical Bayesian IRT Modeling in R\n\n\n\n\n\n\nBayes\n\n\nTutorial\n\n\nbrms\n\n\n\n\n\n\n\n\n\nJun 13, 2024\n\n\nBertrand Wilden\n\n\n\n\n\n\n\n\n\n\n\n\nThe NYC Rat Index\n\n\n\n\n\n\nBayes\n\n\nGIS\n\n\nR\n\n\n\n\n\n\n\n\n\nMay 29, 2024\n\n\nBertrand Wilden\n\n\n\n\n\n\n\n\n\n\n\n\nMapping Airbnbs in San Diego\n\n\n\n\n\n\nGIS\n\n\nTutorial\n\n\n\n\n\n\n\n\n\nJul 31, 2023\n\n\nBertrand Wilden\n\n\n\n\n\n\n\n\n\n\n\n\nProbing the Depths of Probit Regression\n\n\n\n\n\n\nBayes\n\n\nbrms\n\n\nTutorial\n\n\n\n\n\n\n\n\n\nJun 21, 2023\n\n\nBertrand Wilden\n\n\n\n\n\n\n\n\n\n\n\n\nDoes Height Matter When Running for President?\n\n\n\n\n\n\nBayes\n\n\n\n\n\n\n\n\n\nAug 9, 2022\n\n\nBertrand Wilden\n\n\n\n\n\n\nNo matching items"
+    "text": "Practical Bayesian IRT Modeling in R\n\n\n\n\n\n\nBayes\n\n\nTutorial\n\n\nbrms\n\n\nR\n\n\n\n\n\n\n\n\n\nJun 13, 2024\n\n\nBertrand Wilden\n\n\n\n\n\n\n\n\n\n\n\n\nThe NYC Rat Index\n\n\n\n\n\n\nBayes\n\n\nGIS\n\n\nR\n\n\n\n\n\n\n\n\n\nMay 29, 2024\n\n\nBertrand Wilden\n\n\n\n\n\n\n\n\n\n\n\n\nMapping Airbnbs in San Diego\n\n\n\n\n\n\nGIS\n\n\nTutorial\n\n\nR\n\n\n\n\n\n\n\n\n\nJul 31, 2023\n\n\nBertrand Wilden\n\n\n\n\n\n\n\n\n\n\n\n\nProbing the Depths of Probit Regression\n\n\n\n\n\n\nBayes\n\n\nbrms\n\n\nTutorial\n\n\nR\n\n\n\n\n\n\n\n\n\nJun 21, 2023\n\n\nBertrand Wilden\n\n\n\n\n\n\n\n\n\n\n\n\nDoes Height Matter When Running for President?\n\n\n\n\n\n\nBayes\n\n\nR\n\n\n\n\n\n\n\n\n\nAug 9, 2022\n\n\nBertrand Wilden\n\n\n\n\n\n\nNo matching items"
   },
   {
     "objectID": "nyc-rat-index.html",
     "href": "nyc-rat-index.html",
     "title": "The NYC Rat Index",
     "section": "",
-    "text": "Rat hot-spots in New York City. The scale displays each ZIP code’s percentile on the Rat Index. Full blog post and methodology here."
+    "text": "New York City Rat Index percentiles by ZIP code\nFull blog post and methodology here"
   },
   {
     "objectID": "posts/probit-probit/index.html",
