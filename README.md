@@ -1,6 +1,4 @@
-## Bertrand Wilden
-
-Hello! 👋
+## Hello! 👋
 
 Here you will find a collection of solo-authored data science projects I worked on during my PhD. For more on what I am working on currently, please check out my [blog](https://www.bwilden.com/blog)!
 
