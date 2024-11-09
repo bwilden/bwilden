@@ -200,6 +200,6 @@
     "href": "index.html",
     "title": "Bertrand Wilden",
     "section": "",
-    "text": "Hello! I am a PhD data scientist specializing in Bayesian modeling methods. My research involves building statistical models to measure latent variables such as political ideology, and developing methods for incorporating the uncertainty from these measurements into downstream analysis. This blog is for showcasing some of my research and other odd quantitative projects I am working on.\nWhen I’m waiting for my MCMC chains to finish I like to rock climb, play board games, and go backpacking."
+    "text": "Welcome! I’m a former political scientist turned data scientist. My PhD research involved developing Bayesian statistical models to measure latent traits in political groups and individuals, as well as on how to integrate uncertainty from these models into downstream analysis. For more on what I am working on lately, feel free check out my blog!\nHobbies I like to do while waiting for my MCMC chains to finish include gardening, running, camping, and watching cheesy rom-coms."
   }
 ]
