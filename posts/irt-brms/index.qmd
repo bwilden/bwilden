@@ -268,7 +268,7 @@ So what do these results say about the 3-3-3 vs 6-3 debate?[^8] Perhaps it's act
 
 ## Conclusion
 
-We should pack the Supreme Court with additional justices so that we have more data to estimate their ideology using IRT models.
+We should pack the Supreme Court with additional justices so that, among other reasons, we have more data to estimate their ideology using IRT models.
 
 
 ```{r}
