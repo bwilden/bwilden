@@ -22,7 +22,7 @@ about:
 
 ::: {.justify}
 
-Welcome! I’m a former political scientist turned data scientist. My PhD research involved developing Bayesian statistical models to measure latent variables, such as ideology, among political groups and individuals. I also explored new ways to integrate uncertainty from such measurements into downstream analysis. For more on what I am working on lately, feel free check out my [blog](https://www.bwilden.com/blog)!
+Welcome! I’m a former computational social scientist turned data scientist. My PhD research involved developing Bayesian statistical models to measure latent variables, such as ideology, among political groups and individuals. I also explored new ways to integrate uncertainty from such measurements into downstream analysis. For more on what I am working on lately, feel free check out my [blog](https://www.bwilden.com/blog)!
 
 Hobbies I like to do while waiting for my MCMC chains to finish include gardening, running, and camping.
 
